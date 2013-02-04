@@ -51,7 +51,7 @@ TD P{margin:0px;}
 <BODY >
 <!--HEVEA command line is: hevea -exec xxdate.exe urlhref.hva manual.tex -->
 <!--CUT DEF chapter 1 --><TABLE CLASS="title"><TR><TD><H1 CLASS="titlemain">The Checker Framework:<BR>
-Custom pluggable types for Java</H1><H3 CLASS="titlerest"><A HREF="http://types.cs.washington.edu/checker-framework/"><TT>http://types.cs.washington.edu/checker-framework/</TT></A></H3><H3 CLASS="titlerest">Version 1.5.0 (14 Jan 2013)</H3></TD></TR>
+Custom pluggable types for Java</H1><H3 CLASS="titlerest"><A HREF="http://types.cs.washington.edu/checker-framework/"><TT>http://types.cs.washington.edu/checker-framework/</TT></A></H3><H3 CLASS="titlerest">Version 1.6.0 (1 Feb 2013)</H3></TD></TR>
 </TABLE><P><B>For the impatient:</B>
 Section&#XA0;<A HREF="#installation">1.2</A>
 describes how to <B>install and use</B> pluggable type-checkers.</P><!--TOC chapter Contents-->
@@ -318,8 +318,11 @@ wish to write error-free code, and to type system designers who wish to
 evaluate and deploy their type systems.</P><P>This document uses the terms &#X201C;checker&#X201D;, &#X201C;checker plugin&#X201D;,
 &#X201C;type-checking compiler plugin&#X201D;, and &#X201C;annotation processor&#X201D; as
 synonyms.</P><!--TOC section Installation-->
-<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="installation">1.2</A>&#XA0;&#XA0;Installation</H2><!--SEC END --><P>This section describes how to install the binary release of the Checker
-Framework. The binary release contains everything that you need, both to
+<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="installation">1.2</A>&#XA0;&#XA0;Installation</H2><!--SEC END --><P>This section describes how to install the Checker
+Framework for use from the command line, Ant, and Maven. If you wish to
+use the Checker Framework from Eclipse, see the Checker Framework Eclipse
+Plugin webpage: <A HREF="http://types.cs.washington.edu/checker-framework/current/checkers.zip"><TT>http://types.cs.washington.edu/checker-framework/current/checkers.zip</TT></A>.
+The Checker Framework release contains everything that you need, both to
 run checkers and to write your own checkers. As an alternative, you can
 build the latest development version from source
 (Section&#XA0;<A HREF="#build-source">25.3</A>).</P><P><B>Requirement:</B>
@@ -370,10 +373,16 @@ alias. For example:</P><PRE CLASS="verbatim">  # Unix
   # Windows
   doskey javacheck=java -jar %CHECKERS%\binary\checkers.jar $*
 </PRE></LI></UL></LI></OL><P>To ensure that it was installed properly, run <TT>javac -version</TT> (possibly using the
-full pathname to <TT>javac</TT> or the alias, if you did not add the Type Annotations <TT>javac</TT> to your path).</P><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.5.0
+full pathname to <TT>javac</TT> or the alias, if you did not add the Type Annotations <TT>javac</TT> to your path).</P><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.0
 </PRE><P>That&#X2019;s all there is to it! Now you are ready to start using the checkers.</P><P>Section&#XA0;<A HREF="#example-use">1.3</A> walks you through a simple example. More detailed
-instructions for using a checker appear in Chapter&#XA0;<A HREF="#using-a-checker">2</A>.</P><!--TOC section Example use: detecting a null pointer bug-->
-<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="example-use">1.3</A>&#XA0;&#XA0;Example use: detecting a null pointer bug</H2><!--SEC END --><P>To run a checker on a source file, just run javac as usual, passing the
+instructions for using a checker appear in Chapter&#XA0;<A HREF="#using-a-checker">2</A>.
+There is also a <A HREF="http://types.cs.washington.edu/checker-framework/tutorial/">tutorial</A>
+that walks you through how to use the Checker Framework in Eclipse or on
+the command line.</P><!--TOC section Example use: detecting a null pointer bug-->
+<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="example-use">1.3</A>&#XA0;&#XA0;Example use: detecting a null pointer bug</H2><!--SEC END --><P>This section gives a very simple example of running the Checker Framework
+from the command line. There is also a <A HREF="http://types.cs.washington.edu/checker-framework/tutorial/">tutorial</A>
+that gives more extensive instructions for using the Checker Framework in
+Eclipse or on the command line.</P><P>To run a checker on a source file, just run javac as usual, passing the
 <TT>-processor</TT> flag. (You can also use an IDE or other build tool; see
 Chapter&#XA0;<A HREF="#external-tools">23</A>.)</P><P>For instance, if you usually run the compiler like
 this:</P><PRE CLASS="verbatim">  javac Foo.java Bar.java
@@ -440,7 +449,10 @@ Chapter&#XA0;<A HREF="#advanced-type-system-features">19</A>: Advanced type syst
 </LI><LI CLASS="li-itemize">Chapter&#XA0;<A HREF="#annotating-libraries">21</A>: Annotating libraries
 </LI><LI CLASS="li-itemize">Chapter&#XA0;<A HREF="#writing-a-checker">22</A>: How to create a new checker
 </LI><LI CLASS="li-itemize">Chapter&#XA0;<A HREF="#external-tools">23</A>: Integration with external tools
-</LI></UL><!--TOC section Writing annotations-->
+</LI></UL><P>Finally, there is a 
+<A HREF="http://types.cs.washington.edu/checker-framework/tutorial/">tutorial</A>
+that walks you through using the Checker Framework in Eclipse or on the
+command line.</P><!--TOC section Writing annotations-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="writing-annotations">2.1</A>&#XA0;&#XA0;Writing annotations</H2><!--SEC END --><P>The syntax of type annotations in Java is specified by
 <A HREF="http://types.cs.washington.edu/jsr308/">JSR 308</A>&#XA0;[<A HREF="#JSR308-2008-09-12">Ern08</A>]. Ordinary
 Java permits annotations on declarations. JSR 308 permits annotations
@@ -1868,7 +1880,7 @@ programmer annotation burden, but would provide additional guarantees.</P><P>Loc
 another, or specify a global ordering for all locks. This would prevent
 deadlock.</P><P>Not-holding: Specify that a method must not be called if any of the listed
 locks are held.</P><P>These features are supported by 
-<A HREF="http://clang.llvm.org/docs/LanguageExtensions.html#threadsafety">Clang&#X2019;s thread-safety annotations</A>.</P><HR><!--TOC chapter Fake Enum checker-->
+<A HREF="http://clang.llvm.org/docs/LanguageExtensions.html#thread-safety-annotation-checking">Clang&#X2019;s thread-safety annotations</A>.</P><HR><!--TOC chapter Fake Enum checker-->
 <H1 CLASS="chapter"><!--SEC ANCHOR --><A NAME="fenum-checker">Chapter&#XA0;6</A>&#XA0;&#XA0;Fake Enum checker</H1><!--SEC END --><P>Java&#X2019;s 
 <A HREF="http://docs.oracle.com/javase/specs/jls/se7/html/jls-8.html#jls-8.9"><TT>enum</TT></A>
 keyword lets you define an enumeration type: a finite set of distinct values
@@ -4029,9 +4041,18 @@ may be omitted.</DD><DT CLASS="dt-description"></DT><DD CLASS="dd-description"><
 The return type of a method does not need to match the real method.
 In particular, it is valid to use <TT>java.lang.Object</TT> for every method.
 This simplifies the creation of stub files.</DD><DT CLASS="dt-description"></DT><DD CLASS="dd-description"><B>Import statements:</B>
+All imports must be at the beginning of the file.
 The only required import statements are the ones to import type
-annotations. Such imports must be at the beginning of the
-file. Other import statements are optional.</DD><DT CLASS="dt-description"></DT><DD CLASS="dd-description"><B>Multiple classes and packages:</B>
+annotations. Import statements for types are optional.<P>Enum constants in annotations need to be either fully qualified
+or imported.
+For example, one has to either write the enum constant <TT>ANY</TT> in
+fully-qualified form:</P><PRE CLASS="verbatim">@FlowSources(sparta.checkers.quals.FlowSources.FlowSource.ANY)
+</PRE><P>or correctly import the enum class:</P><PRE CLASS="verbatim">import sparta.checkers.quals.FlowSources.FlowSource;
+...
+@FlowSources(FlowSource.ANY)
+</PRE><P>Importing all packages from a class (<TT>import my.package.*;</TT>) only
+considers annotations from that package; enum types need to be
+explicitly imported.</P></DD><DT CLASS="dt-description"></DT><DD CLASS="dd-description"><B>Multiple classes and packages:</B>
 The stub file format permits having multiple classes and packages.
 The packages are separated by a package statement:
 <TT>package my.package;</TT>. Each package declaration may occur only once; in
@@ -4081,9 +4102,7 @@ future release.</P><UL CLASS="itemize"><LI CLASS="li-itemize">
 The receiver is written after the method parameter list, instead of as an
 explicit first parameter. That is, instead of<PRE CLASS="verbatim">     returntype methodname(@Annotations C this, params);
 </PRE><P>in a stub file one has to write</P><PRE CLASS="verbatim">     returntype methodname(params) @Annotations;
-</PRE></LI><LI CLASS="li-itemize">Enum constants in annotations need to be fully qualified. For example,
-one has to write the enum constant <TT>ANY</TT> in fully-qualified form:<PRE CLASS="verbatim">@FlowSources(sparta.checkers.quals.FlowSources.FlowSource.ANY)
-</PRE><P>even when the enum class is correctly imported.</P></LI><LI CLASS="li-itemize">The stub file reader
+</PRE></LI><LI CLASS="li-itemize">The stub file reader
 does not handle nested classes. To work around this, it permits a
 top-level class to be written with a <TT>$</TT> in its name, and applies the
 annotations to the appropriate nested class.
@@ -4756,14 +4775,14 @@ new directory named <TT>jsr308</TT>.<PRE CLASS="verbatim">  export JSR308=$HOME/
   unzip checkers.zip
   chmod +x checker-framework/checkers/binary/javac
   checker-framework/checkers/binary/javac -version
-</PRE><P>The output of the last command should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.5.0
+</PRE><P>The output of the last command should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.0
 </PRE></LI><LI CLASS="li-enumerate">Place the following commands in your <TT>.bashrc</TT> file:
 <PRE CLASS="verbatim">  export JSR308=$HOME/jsr308
   export CHECKERS=$JSR308/checker-framework/checkers
   export PATH=$CHECKERS/binary:${PATH}
 </PRE><P>Also execute them on the command line, or log out and back in. Then,
 verify that the installation works. From the command line, run:</P><PRE CLASS="verbatim">  javac -version
-</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.5.0
+</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.0
 </PRE></LI></OL><P>That&#X2019;s all there is to it! Now you are ready to start using the checkers with
 the new <TT>javac</TT> compiler.</P><!--TOC subsection Windows installation-->
 <H3 CLASS="subsection"><A NAME="windows-installation"><!--SEC ANCHOR -->23.1.2&#XA0;&#XA0;Windows installation</A></H3><!--SEC END --><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">Download the latest Checker Framework distribution
@@ -4779,7 +4798,7 @@ the <TT>checkers</TT> directory, then Select <TT>Extract all files</TT>, and use
 <TT>C:</TT><TT>\</TT><TT>Program Files</TT><TT>\</TT><TT>checker-framework</TT> folder.
 </LI><LI CLASS="li-enumerate">Verify that the installation works. From a Windows command prompt, run:<PRE CLASS="verbatim">  set CHECKERS = C:\Program Files\checker-framework\checkers
   java -jar C:%CHECKERS%\binary\checkers.jar -version
-</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.5.0
+</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.0
 </PRE></LI></OL></LI><LI CLASS="li-enumerate">In order to use the updated compiler when you type <TT>javac</TT>, add the
 directory <TT>C:</TT><TT>\</TT><TT>Program Files</TT><TT>\</TT><TT>checker-framework</TT><TT>\</TT><TT>checkers</TT><TT>\</TT><TT>binary</TT> to the
 beginning of your path variable. Also set a CHECKERS variable.<P>To set an environment variable, you have two options: make the change
@@ -4804,7 +4823,7 @@ dialog box, move the cursor to the beginning of the string in the
 <CODE>%CHECKERS%</CODE> environment variable) followed by a
 semicolon (<TT>;</TT>).<P>Similarly, set the CHECKERS variable.</P><P>This is a permanent change that only needs to be done once ever.
 </P></LI></UL><P>Now, verify that the installation works. From the command line, run:</P><PRE CLASS="verbatim">  javac -version
-</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.5.0
+</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.0
 </PRE></LI></OL><!--TOC section Ant task-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="ant-task">23.2</A>&#XA0;&#XA0;Ant task</H2><!--SEC END --><P>If you use the <A HREF="http://ant.apache.org/">Ant</A> build tool to compile
 your software, then you can add an Ant task that runs a checker. We assume
@@ -4937,7 +4956,7 @@ have to declared as a dependency:<PRE CLASS="verbatim">    &lt;dependencies&gt;
     &lt;/build&gt;
 </PRE></LI></OL><P>The plugin was contributed by Adam Warski.
 </P><!--TOC section Gradle-->
-<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="gradle">23.4</A>&#XA0;&#XA0;Gradle</H2><!--SEC END --><P>If you fork the compilation task, <A HREF="http://gradle.org/">Gradle</A>
+<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="gradle">23.4</A>&#XA0;&#XA0;Gradle</H2><!--SEC END --><P>If you fork the compilation task, <A HREF="http://www.gradle.org/">Gradle</A>
 lets you specify the executable to compile java programs.</P><P>To specify the appropriate executable, set
 <TT>options.fork = true</TT> and
 <TT>compile.options.fork.executable = "$CHECKERS/binary/javac"</TT></P><P>To specify command-line arguments, set
@@ -4958,7 +4977,10 @@ lets you specify the executable to compile java programs.</P><P>To specify the a
 the Type Annotations (JSR-308) syntax.
 See <A HREF="http://blogs.jetbrains.com/idea/2009/07/type-annotations-jsr-308-support/"><TT>http://blogs.jetbrains.com/idea/2009/07/type-annotations-jsr-308-support/</TT></A>.</P><!--TOC section Eclipse-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="eclipse">23.6</A>&#XA0;&#XA0;Eclipse</H2><!--SEC END --><P>There are two ways to run a checker from within the Eclipse IDE: via Ant
-or using an Eclipse plug-in.</P><!--TOC paragraph Using an Ant task-->
+or using an Eclipse plug-in. No matter what method you choose, we suggest that
+all Checker Framework annotations be written in the comments. This will avoid many
+text highlighting errors with versions of Eclipse that don&#X2019;t support Java 8 and the
+new JSR308 syntax changes.</P><!--TOC paragraph Using an Ant task-->
 <H5 CLASS="paragraph"><!--SEC ANCHOR -->Using an Ant task</H5><!--SEC END --><P>Add an Ant target as described in Section&#XA0;<A HREF="#ant-task">23.2</A>. You can
 run the Ant target by executing the following steps
 (instructions copied from
@@ -5551,8 +5573,8 @@ This needs to be an Oracle JDK.
 variable might already be set, because it is needed for Ant to work.)<P>In the bash shell, the following command <EM>sometimes</EM> works (it might
 not because <TT>java</TT> might be the version in the JDK or in the JRE):
 </P><PRE CLASS="verbatim">  export JAVA_HOME=${JAVA_HOME:-$(dirname $(dirname $(dirname $(readlink -f $(/usr/bin/which java)))))}
-</PRE></LI><LI CLASS="li-enumerate">Compile the Type Annotations javac compiler and the javap tool:<PRE CLASS="verbatim">  cd $JSR308/jsr308-langtools/make
-  ant clean build-javac build-javap
+</PRE></LI><LI CLASS="li-enumerate">Compile the Type Annotations tools:<PRE CLASS="verbatim">  cd $JSR308/jsr308-langtools/make
+  ant clean-and-build-all-tools
 </PRE></LI><LI CLASS="li-enumerate">Add the <TT>jsr308-langtools/dist/bin</TT> directory to the front of your PATH environment variable.
 Example command:<PRE CLASS="verbatim">  export PATH=$JSR308/jsr308-langtools/dist/bin:${PATH}
 </PRE><P>You may wish to later put the Checker Framework <TT>javac</TT> even earlier on
