@@ -51,7 +51,7 @@ TD P{margin:0px;}
 <BODY >
 <!--HEVEA command line is: hevea -exec xxdate.exe urlhref.hva manual.tex -->
 <!--CUT DEF chapter 1 --><TABLE CLASS="title"><TR><TD><H1 CLASS="titlemain">The Checker Framework:<BR>
-Custom pluggable types for Java</H1><H3 CLASS="titlerest"><A HREF="http://types.cs.washington.edu/checker-framework/"><TT>http://types.cs.washington.edu/checker-framework/</TT></A></H3><H3 CLASS="titlerest">Version 1.6.0 (1 Feb 2013)</H3></TD></TR>
+Custom pluggable types for Java</H1><H3 CLASS="titlerest"><A HREF="http://types.cs.washington.edu/checker-framework/"><TT>http://types.cs.washington.edu/checker-framework/</TT></A></H3><H3 CLASS="titlerest">Version 1.6.1 (1 Mar 2013)</H3></TD></TR>
 </TABLE><P><B>For the impatient:</B>
 Section&#XA0;<A HREF="#installation">1.2</A>
 describes how to <B>install and use</B> pluggable type-checkers.</P><!--TOC chapter Contents-->
@@ -373,7 +373,7 @@ alias. For example:</P><PRE CLASS="verbatim">  # Unix
   # Windows
   doskey javacheck=java -jar %CHECKERS%\binary\checkers.jar $*
 </PRE></LI></UL></LI></OL><P>To ensure that it was installed properly, run <TT>javac -version</TT> (possibly using the
-full pathname to <TT>javac</TT> or the alias, if you did not add the Type Annotations <TT>javac</TT> to your path).</P><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.0
+full pathname to <TT>javac</TT> or the alias, if you did not add the Type Annotations <TT>javac</TT> to your path).</P><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.1
 </PRE><P>That&#X2019;s all there is to it! Now you are ready to start using the checkers.</P><P>Section&#XA0;<A HREF="#example-use">1.3</A> walks you through a simple example. More detailed
 instructions for using a checker appear in Chapter&#XA0;<A HREF="#using-a-checker">2</A>.
 There is also a <A HREF="http://types.cs.washington.edu/checker-framework/tutorial/">tutorial</A>
@@ -1523,7 +1523,13 @@ note FindBugs&#X2019;s non-standard meaning for <TT>@Nullable</TT>
 (Section&#XA0;<A HREF="#findbugs-nullable">3.10.2</A>).</P><P>Because some of the names are the same (<TT>NonNull</TT>, <TT>Nullable</TT>), you can
 import at most one of the annotations with
 conflicting names; the other(s) must be written out fully rather than
-imported.</P><!--TOC subsection Which tool is right for you?-->
+imported.</P><P>Note that some older tools interpret array and vararg declarations
+inconsistently with the Java specification. For example, they might
+interpret <TT>@NonNull Object []</TT> as &#X201C;non-null array of objects&#X201D;, rather
+than as &#X201C;array of non-null objects&#X201D; which is the correct Java
+interpretation. Such an interpretation is unfortunate and confusing. See
+Section&#XA0;<A HREF="#faq-array-syntax-meaning">24.18</A> for some more details about this
+issue.</P><!--TOC subsection Which tool is right for you?-->
 <H3 CLASS="subsection"><A NAME="choosing-nullness-tool"><!--SEC ANCHOR -->3.10.1&#XA0;&#XA0;Which tool is right for you?</A></H3><!--SEC END --><P>Different tools are appropriate in different circumstances. Here is a
 brief comparison with FindBugs, but similar points apply to other tools.</P><P>The Checker Framework has a more powerful nullness analysis; FindBugs misses
 some real
@@ -2262,7 +2268,7 @@ following two command-line options:</P><OL CLASS="enumerate" type=1><LI CLASS="l
 The checker uses the default <TT>Locale</TT> and <TT>ClassLoader</TT> in the
 compilation system.
 (For a tutorial about <TT>ResourceBundle</TT>s, see
-<A HREF="http://docs.oracle.com/javase/tutorial/ui/features/i18n.html"><TT>http://docs.oracle.com/javase/tutorial/ui/features/i18n.html</TT></A>.)
+<A HREF="http://docs.oracle.com/javase/tutorial/i18n/resbundle/concept.html"><TT>http://docs.oracle.com/javase/tutorial/i18n/resbundle/concept.html</TT></A>.)
 Multiple resource bundle names are separated by colons &#X2019;<TT>:</TT>&#X2019;.</P></LI><LI CLASS="li-enumerate"><TT>-Apropfiles=</TT><TT><EM>prop_file</EM></TT><P><EM>prop_file</EM> is the name of a properties file that maps
 keys to values. The file format is described in
 the Javadoc for 
@@ -4272,7 +4278,7 @@ meta-annotation.</P></LI></UL><P>The declarative and procedural mechanisms for s
 be used together. In particular, when using the <TT>@</TT><A HREF="doc/checkers/quals/SubtypeOf.html"><TT>SubtypeOf</TT></A>
 meta-annotation, further customizations may be
 performed procedurally (Section&#XA0;<A HREF="#procedural-hierarchy">22.3.2</A>)
-by overriding the <A HREF="doc/checkers/basetype/BaseTypeChecker.html#isSubtype(checkers.types.AnnotatedTypeMirror,%20checkers.types.AnnotatedTypeMirror)"><TT>isSubtype</TT></A> method in the checker class
+by overriding the <A HREF="doc/checkers/util/GraphQualifierHierarchy.html#isSubtype(java.util.Collection,%20java.util.Collection)"><TT>isSubtype</TT></A> method in the checker class
 (Section&#XA0;<A HREF="#writing-compiler-interface">22.6</A>).
 However, the declarative mechanism is sufficient for most type systems.</P><!--TOC subsection Procedurally defining the qualifier and type hierarchy-->
 <H3 CLASS="subsection"><A NAME="procedural-hierarchy"><!--SEC ANCHOR -->22.3.2&#XA0;&#XA0;Procedurally defining the qualifier and type hierarchy</A></H3><!--SEC END --><P>While the declarative syntax suffices for many cases, more complex
@@ -4312,7 +4318,7 @@ Note that the default will apply to any source code that the checker reads,
 including stub libraries, but will not apply to compiled <TT>.class</TT>
 files that the checker reads.</P><P>Alternately, the type system designer may specify a default procedurally,
 by calling the
-<A HREF="doc/checkers/util/QualifierDefaults.html#addAbsoluteDefault(javax.lang.model.element.AnnotationMirror,%20java.util.Set)"><TT>QualifierDefaults.addAbsoluteDefault</TT></A>
+<A HREF="doc/checkers/util/QualifierDefaults.html#addAbsoluteDefault(javax.lang.model.element.AnnotationMirror,%20checkers.quals.DefaultLocation)"><TT>QualifierDefaults.addAbsoluteDefault</TT></A>
 method. You may do this even if you have declaratively defined the
 qualifier hierarchy; see the Nullness checker&#X2019;s implementation for an
 example.</P><P>Recall that defaults are distinct
@@ -4549,7 +4555,7 @@ A user can pass
 multiple <TT>-processor</TT> command-line options, like:<PRE CLASS="verbatim">  javac -processor DistanceUnitChecker -processor SpeedUnitChecker ... files ...
 </PRE><P>This is verbose, and it is also error-prone, since a user might omit one of
 several related checkers that are designed to be run together.</P></LI><LI CLASS="li-enumerate">You can define an aggregate checker class that combines
-multiple checkers. Extend <A HREF="doc/checkers/util/AggregateChecker.html"><TT>AggregateChecker</TT></A> and override
+multiple checkers. Extend <A HREF="doc/checkers/source/AggregateChecker.html"><TT>AggregateChecker</TT></A> and override
 the <TT>getSupportedTypeCheckers</TT> method, like the following:<PRE CLASS="verbatim">  public class UnitCheckers extends AggregateChecker {
     protected Collection&lt;Class&lt;? extends SourceChecker&gt;&gt; getSupportedCheckers() {
       return Arrays.asList(DistanceUnitChecker.class, SpeedUnitChecker.class);
@@ -4693,7 +4699,7 @@ the utility class for a <TT>Foo</TT> hierarchy is <TT>Foos</TT> (e.g.,
 <A HREF="http://docs.oracle.com/javase/7/docs/jdk/api/javac/tree/com/sun/source/util/Trees.html?is-external=true"><TT>Trees</TT></A>). The Checker Framework uses a common
 <TT>Utils</TT> suffix instead (e.g., <A HREF="doc/checkers/util/TypesUtils.html"><TT>TypesUtils</TT></A>,
 <A HREF="doc/checkers/util/TreeUtils.html"><TT>TreeUtils</TT></A>, <A HREF="doc/checkers/util/ElementUtils.html"><TT>ElementUtils</TT></A>), with one
-notable exception: <A HREF="doc/checkers/types/AnnotatedTypes.html"><TT>AnnotatedTypes</TT></A>.</P><!--TOC subsection How a checker fits in the compiler as an annotation processor-->
+notable exception: <A HREF="doc/checkers/utils/AnnotatedTypes.html"><TT>AnnotatedTypes</TT></A>.</P><!--TOC subsection How a checker fits in the compiler as an annotation processor-->
 <H3 CLASS="subsection"><!--SEC ANCHOR -->22.9.2&#XA0;&#XA0;How a checker fits in the compiler as an annotation processor</H3><!--SEC END --><P>The Checker Framework builds on the Annotation Processing API
 introduced in Java 6. A type annotation processor is one that extends
 <A HREF="http://docs.oracle.com/javase/7/docs/jdk/api/javac/tree/com/sun/source/util/AbstractTypeProcessor.html?is-external=true"><TT>AbstractTypeProcessor</TT></A>; these get run on each class
@@ -4775,14 +4781,14 @@ new directory named <TT>jsr308</TT>.<PRE CLASS="verbatim">  export JSR308=$HOME/
   unzip checkers.zip
   chmod +x checker-framework/checkers/binary/javac
   checker-framework/checkers/binary/javac -version
-</PRE><P>The output of the last command should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.0
+</PRE><P>The output of the last command should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.1
 </PRE></LI><LI CLASS="li-enumerate">Place the following commands in your <TT>.bashrc</TT> file:
 <PRE CLASS="verbatim">  export JSR308=$HOME/jsr308
   export CHECKERS=$JSR308/checker-framework/checkers
   export PATH=$CHECKERS/binary:${PATH}
 </PRE><P>Also execute them on the command line, or log out and back in. Then,
 verify that the installation works. From the command line, run:</P><PRE CLASS="verbatim">  javac -version
-</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.0
+</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.1
 </PRE></LI></OL><P>That&#X2019;s all there is to it! Now you are ready to start using the checkers with
 the new <TT>javac</TT> compiler.</P><!--TOC subsection Windows installation-->
 <H3 CLASS="subsection"><A NAME="windows-installation"><!--SEC ANCHOR -->23.1.2&#XA0;&#XA0;Windows installation</A></H3><!--SEC END --><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">Download the latest Checker Framework distribution
@@ -4798,7 +4804,7 @@ the <TT>checkers</TT> directory, then Select <TT>Extract all files</TT>, and use
 <TT>C:</TT><TT>\</TT><TT>Program Files</TT><TT>\</TT><TT>checker-framework</TT> folder.
 </LI><LI CLASS="li-enumerate">Verify that the installation works. From a Windows command prompt, run:<PRE CLASS="verbatim">  set CHECKERS = C:\Program Files\checker-framework\checkers
   java -jar C:%CHECKERS%\binary\checkers.jar -version
-</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.0
+</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.1
 </PRE></LI></OL></LI><LI CLASS="li-enumerate">In order to use the updated compiler when you type <TT>javac</TT>, add the
 directory <TT>C:</TT><TT>\</TT><TT>Program Files</TT><TT>\</TT><TT>checker-framework</TT><TT>\</TT><TT>checkers</TT><TT>\</TT><TT>binary</TT> to the
 beginning of your path variable. Also set a CHECKERS variable.<P>To set an environment variable, you have two options: make the change
@@ -4823,7 +4829,7 @@ dialog box, move the cursor to the beginning of the string in the
 <CODE>%CHECKERS%</CODE> environment variable) followed by a
 semicolon (<TT>;</TT>).<P>Similarly, set the CHECKERS variable.</P><P>This is a permanent change that only needs to be done once ever.
 </P></LI></UL><P>Now, verify that the installation works. From the command line, run:</P><PRE CLASS="verbatim">  javac -version
-</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.0
+</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.1
 </PRE></LI></OL><!--TOC section Ant task-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="ant-task">23.2</A>&#XA0;&#XA0;Ant task</H2><!--SEC END --><P>If you use the <A HREF="http://ant.apache.org/">Ant</A> build tool to compile
 your software, then you can add an Ant task that runs a checker. We assume
@@ -5326,7 +5332,15 @@ objects. Note that the first token in the type,
 type <TT>Object</TT>, not to the array type as a whole. The annotation <TT>@Nullable</TT> applies to the
 array (<TT>[]</TT>).</P><P>Similarly,
 <TT>@Nullable Object @NonNull []</TT> is a non-null array of possibly-null
-objects.</P><!--TOC section Why are the type parameters to <TT>List</TT> and <TT>Map</TT> annotated as <TT>@NonNull</TT>?-->
+objects.</P><P>Some older tools interpret a declaration like <TT>@NonEmpty String[] var</TT> as
+&#X201C;non-empty array of strings&#X201D;. This is in conflict with the Java type
+annotations specification, which defines it as meanning &#X201C;array of
+non-empty strings&#X201D;.
+If you use one of these
+older tools, you will find this incompatibility confusing.
+You will have to live with it until the older
+tool is updated to conform to the Java specification, or until you
+transition to a newer tool that conforms to the Java specification.</P><!--TOC section Why are the type parameters to <TT>List</TT> and <TT>Map</TT> annotated as <TT>@NonNull</TT>?-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="faq-list-map-nonnull-typeargs">24.19</A>&#XA0;&#XA0;Why are the type parameters to <TT>List</TT> and <TT>Map</TT> annotated as <TT>@NonNull</TT>?</H2><!--SEC END --><P>The annotation on <TT>java.util.Collection</TT> only allows non-null elements:</P><PRE CLASS="verbatim">  public interface Collection&lt;E extends @NonNull Object&gt; {
     ...
   }

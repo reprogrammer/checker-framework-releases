@@ -18,7 +18,6 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.type.AnnotatedType;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
@@ -87,9 +86,8 @@ public abstract class AnnotatedTypeMirror {
         if (replacer == null)
             replacer = new Replacer(atypeFactory.types);
 
-        if (type.getKind() == TypeKind.ANNOTATED) {
-            type = ((AnnotatedType)type).getUnderlyingType();
-        }
+        type = ((com.sun.tools.javac.code.Type)type).unannotatedType();
+
         switch (type.getKind()) {
             case ARRAY:
                 return new AnnotatedArrayType((ArrayType) type, atypeFactory);
@@ -830,6 +828,11 @@ public abstract class AnnotatedTypeMirror {
             StringBuilder sb = new StringBuilder();
             final Element typeElt = this.getUnderlyingType().asElement();
             String smpl = typeElt.getSimpleName().toString();
+            if (smpl.isEmpty()) {
+                // For anonymous classes smpl is empty - toString
+                // of the element is more useful.
+                smpl = typeElt.toString();
+            }
             sb.append(formatAnnotationString(getAnnotations(), printInvisible));
             sb.append(smpl);
             if (!this.getTypeArguments().isEmpty()) {
@@ -1291,9 +1294,14 @@ public abstract class AnnotatedTypeMirror {
             sb.append(getReceiverType().toString(printInvisible));
             sb.append(" this");
             if (!getParameterTypes().isEmpty()) {
-                sb.append(", ");
+                int p = 0;
                 for (AnnotatedTypeMirror atm : getParameterTypes()) {
+                    sb.append(", ");
                     sb.append(atm.toString(printInvisible));
+                    // Output some parameter names to make it look more like a method.
+                    // TODO: go to the element and look up real parameter names, maybe.
+                    sb.append(" p");
+                    sb.append(p++);
                 }
             }
             sb.append(')');
@@ -2169,6 +2177,7 @@ public abstract class AnnotatedTypeMirror {
 
         protected List<AnnotatedDeclaredType> supertypes;
 
+        @Override
         public List<AnnotatedDeclaredType> directSuperTypes() {
             if (supertypes == null) {
                 List<? extends TypeMirror> ubounds = actualType.getBounds();
