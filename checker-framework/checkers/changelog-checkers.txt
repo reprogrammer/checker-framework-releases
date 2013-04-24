@@ -1,28 +1,41 @@
+Version 1.6.2, 01 Apr 2013
+
+Eclipse plugin:
+  The "Additional compiler parameters" text field has now been replaced by a list.  Parameters in this list may be activated/deactivated via checkbox.
+
+Eclipse plugin bug fixes:
+   Classpaths and source files should now be correctly quoted when they contain spaces.
+
+Internal framework improvements:
+  Update pom files to use the same update-version code as the Checker Framework "web" ant task.  Remove pom specific update-version code.
+  Update build ant tasks to avoid re-running targets when executing tests from the release script.
+
+----------------------------------------------------------------------
+
 Version 1.6.1, 01 Mar 2013
 
 User-visible framework improvements:
-  A number of error messages have been clarified
+  A number of error messages have been clarified.
   Stub file now supports type annotations in front and after method type variable declarations.
   You may now specify custom paths to javac.jar and jdk7.jar on the command line for non-standard installations.
 
 Internal framework improvements:
-  Adapt to underlying jsr308-langtools changes
-  Add shouldBeApplied method to avoid unnecessary scans in DefaultApplier and avoid annotating void types
-  Add createQualifierDefaults and createQualifierPolymorphism factory methods
+  Add shouldBeApplied method to avoid unnecessary scans in DefaultApplier and avoid annotating void types.
+  Add createQualifierDefaults and createQualifierPolymorphism factory methods.
 
 Maven plugin:
-  Put checker framework jars at the beginning of classpath
-  Added option to compile code in order to support checking for multi-module projects
-  The plugin no longer copies the various Checker Framework maven artifacts to one location but instead takes advantage of the new custom path options for javac.jar and jdk7.jar
+  Put Checker Framework jars at the beginning of classpath.
+  Added option to compile code in order to support checking for multi-module projects.
+  The plugin no longer copies the various Checker Framework maven artifacts to one location but instead takes advantage of the new custom path options for javac.jar and jdk7.jar.
   The maven plugin no longer attempts to resolve jdk6.jar
   
 Eclipse plugin:
-  Put checker framework jars at the beginning of classpath.
+  Put Checker Framework jars at the beginning of classpath.
   All files selected from a single project can now be checked.  The previous behavior only checked the entire project or one file depending on the type of the first file selected.
   
 Documentation:
-  Fixed broken links and incomplete URLs in checker-framework manual
-  Update FAQ to discuss conflicting interpretations of array declarations
+  Fixed broken links and incomplete URLs in checker-framework manual.
+  Update FAQ to discuss that some other tools incorrectly interpret array declarations.
   
 Bug fixes
 
@@ -30,18 +43,15 @@ Bug fixes
 Version 1.6.0, 1 Feb 2013
 
 User-visible framework improvements:
-  It is possible to use enum constants in stub files without requiring the
-    fully qualified name, as was previously necessary.
+  It is possible to use enum constants in stub files without requiring the fully qualified name, as was previously necessary.
   Support build on a stock Java 8 OpenJDK.
 
 Adapt to underlying jsr308-langtools changes.
-  Most visible change is syntax for fully-qualified types, from
-  @A java.lang.Object to java.lang.@A Object.
-  Checker Framework does not build or run on JDK 6.
+  The most visible change is syntax for fully-qualified types, from @A java.lang.Object to java.lang.@A Object.
+  The Checker Framework does not build or run on JDK 6.
 
 Documentation:
-  A new tutorial is available at
-    http://types.cs.washington.edu/checker-framework/tutorial/
+  A new tutorial is available at http://types.cs.washington.edu/checker-framework/tutorial/
 
 ----------------------------------------------------------------------
 Version 1.5.0, 14 Jan 2013
