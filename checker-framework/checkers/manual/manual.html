@@ -2,7 +2,7 @@
             "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
-<TITLE>The Checker Framework: 
+<TITLE>The Checker Framework Manual: 
 Custom pluggable types for Java
 </TITLE>
 
@@ -50,8 +50,8 @@ TD P{margin:0px;}
 </HEAD>
 <BODY >
 <!--HEVEA command line is: hevea -exec xxdate.exe urlhref.hva manual.tex -->
-<!--CUT DEF chapter 1 --><TABLE CLASS="title"><TR><TD><H1 CLASS="titlemain">The Checker Framework:<BR>
-Custom pluggable types for Java</H1><H3 CLASS="titlerest"><A HREF="http://types.cs.washington.edu/checker-framework/"><TT>http://types.cs.washington.edu/checker-framework/</TT></A></H3><H3 CLASS="titlerest">Version 1.6.2 (4 Apr 2013)</H3></TD></TR>
+<!--CUT DEF chapter 1 --><TABLE CLASS="title"><TR><TD><H1 CLASS="titlemain">The Checker Framework Manual:<BR>
+Custom pluggable types for Java</H1><H3 CLASS="titlerest"><A HREF="http://types.cs.washington.edu/checker-framework/"><TT>http://types.cs.washington.edu/checker-framework/</TT></A></H3><H3 CLASS="titlerest">Version 1.6.3 (1 May 2013)</H3></TD></TR>
 </TABLE><P><B>For the impatient:</B>
 Section&#XA0;<A HREF="#installation">1.2</A>
 describes how to <B>install and use</B> pluggable type-checkers.</P><!--TOC chapter Contents-->
@@ -243,9 +243,10 @@ describes how to <B>install and use</B> pluggable type-checkers.</P><!--TOC chap
 </LI><LI CLASS="li-toc"><A HREF="#faq-jml">24.16&#XA0;&#XA0;How does pluggable type-checking compare with JML?</A>
 </LI><LI CLASS="li-toc"><A HREF="#faq-no-annotation-on-types-and-declarations">24.17&#XA0;&#XA0;Why shouldn&#X2019;t a qualifier apply to both types and declarations?</A>
 </LI><LI CLASS="li-toc"><A HREF="#faq-receiver">24.18&#XA0;&#XA0;What is a &#X201C;receiver&#X201D;?</A>
-</LI><LI CLASS="li-toc"><A HREF="#faq-array-syntax-meaning">24.19&#XA0;&#XA0;What is the meaning of array annotations such as <TT>@NonNull Object @Nullable []</TT>?</A>
-</LI><LI CLASS="li-toc"><A HREF="#faq-list-map-nonnull-typeargs">24.20&#XA0;&#XA0;Why are the type parameters to <TT>List</TT> and <TT>Map</TT> annotated as <TT>@NonNull</TT>?</A>
-</LI><LI CLASS="li-toc"><A HREF="#faq-checker-framework-part-of-java">24.21&#XA0;&#XA0;Is the Checker Framework an official part of Java?</A>
+</LI><LI CLASS="li-toc"><A HREF="#faq-annotation-after-type">24.19&#XA0;&#XA0;What is the meaning of an annotation after a type, such as <TT>@NonNull Object @Nullable</TT>?</A>
+</LI><LI CLASS="li-toc"><A HREF="#faq-array-syntax-meaning">24.20&#XA0;&#XA0;What is the meaning of array annotations such as <TT>@NonNull Object @Nullable []</TT>?</A>
+</LI><LI CLASS="li-toc"><A HREF="#faq-list-map-nonnull-typeargs">24.21&#XA0;&#XA0;Why are the type parameters to <TT>List</TT> and <TT>Map</TT> annotated as <TT>@NonNull</TT>?</A>
+</LI><LI CLASS="li-toc"><A HREF="#faq-checker-framework-part-of-java">24.22&#XA0;&#XA0;Is the Checker Framework an official part of Java?</A>
 </LI></UL>
 </LI><LI CLASS="li-toc"><A HREF="#troubleshooting">25&#XA0;&#XA0;Troubleshooting and getting help</A>
 <UL CLASS="toc"><LI CLASS="li-toc">
@@ -322,7 +323,7 @@ synonyms.</P><!--TOC section Installation-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="installation">1.2</A>&#XA0;&#XA0;Installation</H2><!--SEC END --><P>This section describes how to install the Checker
 Framework for use from the command line, Ant, and Maven. If you wish to
 use the Checker Framework from Eclipse, see the Checker Framework Eclipse
-Plugin webpage: <A HREF="http://types.cs.washington.edu/checker-framework/current/checkers.zip"><TT>http://types.cs.washington.edu/checker-framework/current/checkers.zip</TT></A>.
+Plugin webpage: <A HREF="http://types.cs.washington.edu/checker-framework/eclipse/"><TT>http://types.cs.washington.edu/checker-framework/eclipse/</TT></A>.
 The Checker Framework release contains everything that you need, both to
 run checkers and to write your own checkers. As an alternative, you can
 build the latest development version from source
@@ -336,14 +337,17 @@ or the <A HREF="http://openjdk.java.net/">OpenJDK</A>.</P><P>The installation pr
 </P><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">
 Download the Checker Framework distribution
 (<A HREF="http://types.cs.washington.edu/checker-framework/current/checkers.zip"><TT>http://types.cs.washington.edu/checker-framework/current/checkers.zip</TT></A>).
-</LI><LI CLASS="li-enumerate">Unzip it to create a <TT>checker-framework</TT> directory.</LI><LI CLASS="li-enumerate">Optionally, update your execution path or create an alias.<P>When doing pluggable type-checking, you need to use the &#X201C;Checker Framework compiler&#X201D;. The
-Checker Framework compiler in turn uses an updated version of the OpenJDK javac compiler that
-understands type annotations known as &#X201C;Type Annotations compiler&#X201D;. The Type Annotations compiler is
-backward-compatible, so using it as your Java compiler should have no negative consequences.</P><P>You can do this in three ways. You can use any one of them. However, if
-you are using the Windows command shell, you must use the last one. The
-instructions assume a <TT>CHECKERS</TT> environment variable that is set
-to the <TT>.../checker-framework/checkers</TT> directory, but you can
-use an absolute path if you prefer.</P><UL CLASS="itemize"><LI CLASS="li-itemize">
+</LI><LI CLASS="li-enumerate">Unzip it to create a <TT>checker-framework</TT> directory.</LI><LI CLASS="li-enumerate">Optionally, update your execution path or create an alias.<P>When doing pluggable type-checking, you need to use the &#X201C;Checker
+Framework compiler&#X201D;. The Checker Framework compiler in turn uses the
+&#X201C;Type Annotations compiler&#X201D;, an advance version of the OpenJDK 8 javac
+compiler that understands type annotations. The Type Annotations
+compiler is backward-compatible, so using it as your Java compiler, even
+when you are not doing pluggable type-checking, should have no negative
+consequences.</P><P>You can use the Checker Framework compiler in three ways. You can use any one of them. However, if
+you are using the Windows command shell, you must use the last one.</P><P>First, set a <TT>CHECKERS</TT> environment variable to the
+<TT>.../checker-framework/checkers</TT> directory. Alternately, you can
+use an absolute path where the below instructions use the <TT>CHECKERS</TT>
+environment variable.</P><UL CLASS="itemize"><LI CLASS="li-itemize">
 Add directory
 <TT>$CHECKERS/binary</TT> to your path, <EM>before</EM> any other
 directory that contains a <TT>javac</TT> executable. Now, whenever
@@ -359,14 +363,9 @@ alias. Here is the syntax for your
 </P><PRE CLASS="verbatim">  alias javacheck='$CHECKERS/binary/javac'
 </PRE></LI><LI CLASS="li-itemize">Whenever this document tells you to run <TT>javac</TT>, instead
 run checkers.jar via <TT>java</TT> (not <TT>javac</TT>) as in:<PRE CLASS="verbatim">  java -jar $CHECKERS/binary/checkers.jar ...
-</PRE><P>Note: Previous versions of these instructions required the use of
-$CHECKERS/binary/javac.jar and providing jsr308-all.jar on the bootclasspath.
-This is no longer the case. The provided javac script and checkers.jar
-will automatically fix up the classpath and bootclasspath for use with
-the Checker Framework and call the type-annotations compiler appropriately.
-jsr308-all.jar no longer exists. Finally, anywhere javac.jar might be used
-you can substitute $CHECKERS/binary/checkers.jar in order to use
-the Checker Framework.</P><P>You can simplify he above command by introducing an alias. Then,
+</PRE><P>More generally, anywhere that you use <TT>javac.jar</TT>, you can substitute
+<TT>$CHECKERS/binary/checkers.jar</TT>; the result is to use the Checker
+Framework compiler instead of the regular <TT>javac</TT>.</P><P>You can simplify the above command by introducing an alias. Then,
 whenever this document tells you to run <TT>javac</TT>, instead use that
 alias. For example:</P><PRE CLASS="verbatim">  # Unix
   alias javacheck='java -jar $CHECKERS/binary/checkers.jar'
@@ -374,7 +373,7 @@ alias. For example:</P><PRE CLASS="verbatim">  # Unix
   # Windows
   doskey javacheck=java -jar %CHECKERS%\binary\checkers.jar $*
 </PRE></LI></UL></LI></OL><P>To ensure that it was installed properly, run <TT>javac -version</TT> (possibly using the
-full pathname to <TT>javac</TT> or the alias, if you did not add the Type Annotations <TT>javac</TT> to your path).</P><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.2
+full pathname to <TT>javac</TT> or the alias, if you did not add the Type Annotations <TT>javac</TT> to your path).</P><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.3
 </PRE><P>That&#X2019;s all there is to it! Now you are ready to start using the checkers.</P><P>Section&#XA0;<A HREF="#example-use">1.3</A> walks you through a simple example. More detailed
 instructions for using a checker appear in Chapter&#XA0;<A HREF="#using-a-checker">2</A>.
 There is also a <A HREF="http://types.cs.washington.edu/checker-framework/tutorial/">tutorial</A>
@@ -1098,7 +1097,7 @@ arguments. One use for this key is when a class is declared to take only
 <TT>@NonNull</TT> type arguments, but you want to instantiate the class with a
 <TT>@Nullable</TT> type argument, as in <TT>List&lt;@Nullable Object&gt;</TT>. For a more
 complete explanation of this example, see
-Section&#XA0;<A HREF="#faq-list-map-nonnull-typeargs">24.20</A>.</P><P>The Nullness Checker also permits you to use assertions or method calls to
+Section&#XA0;<A HREF="#faq-list-map-nonnull-typeargs">24.21</A>.</P><P>The Nullness Checker also permits you to use assertions or method calls to
 suppress warnings; see below.</P><!--TOC subsection Suppressing warnings with assertions and method calls-->
 <H3 CLASS="subsection"><A NAME="suppressing-warnings-with-assertions"><!--SEC ANCHOR -->3.4.1&#XA0;&#XA0;Suppressing warnings with assertions and method calls</A></H3><!--SEC END --><P>Occasionally, it is inconvenient or
 verbose to use the <TT>@SuppressWarnings</TT> annotation. For example, Java does
@@ -1530,7 +1529,7 @@ inconsistently with the Java specification. For example, they might
 interpret <TT>@NonNull Object []</TT> as &#X201C;non-null array of objects&#X201D;, rather
 than as &#X201C;array of non-null objects&#X201D; which is the correct Java
 interpretation. Such an interpretation is unfortunate and confusing. See
-Section&#XA0;<A HREF="#faq-array-syntax-meaning">24.19</A> for some more details about this
+Section&#XA0;<A HREF="#faq-array-syntax-meaning">24.20</A> for some more details about this
 issue.</P><!--TOC subsection Which tool is right for you?-->
 <H3 CLASS="subsection"><A NAME="choosing-nullness-tool"><!--SEC ANCHOR -->3.10.1&#XA0;&#XA0;Which tool is right for you?</A></H3><!--SEC END --><P>Different tools are appropriate in different circumstances. Here is a
 brief comparison with FindBugs, but similar points apply to other tools.</P><P>The Checker Framework has a more powerful nullness analysis; FindBugs misses
@@ -3196,7 +3195,12 @@ written (say, the class performs a
 you have created an unsoundness in the type system.
 For example, it would be incorrect to annotate the type parameter of
 <TT>ListIterator</TT> as covariant, because <TT>ListIterator</TT> supports a <TT>set</TT>
-operation.</P><!--TOC section Qualifier polymorphism-->
+operation.</P><!--TOC subsection Method type argument inference and type qualifiers-->
+<H3 CLASS="subsection"><A NAME="infer-method-type-qualifiers"><!--SEC ANCHOR -->18.1.7&#XA0;&#XA0;Method type argument inference and type qualifiers</A></H3><!--SEC END --><P>Sometimes method type argument inference does not interact well with
+type qualifiers. In such situations, you might need to provide
+explicit method type arguments, for which the syntax is as follows:</P><PRE>
+	Collections.&lt;/*@MyTypeAnnotation*/ Object&gt;sort(l, c);
+</PRE><P>This uses Java&#X2019;s existing syntax for specifying a method call&#X2019;s type arguments.</P><!--TOC section Qualifier polymorphism-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="qualifier-polymorphism">18.2</A>&#XA0;&#XA0;Qualifier polymorphism</H2><!--SEC END --><P>The Checker Framework also supports type <EM>qualifier</EM> polymorphism for
 methods, which permits a single method to have multiple different qualified
 type signatures. This is similar to Java&#X2019;s generics, but is used in
@@ -3434,9 +3438,18 @@ implicit <TT>super void</TT> clause.)</P><!--TOC subsection Automatic type refin
 checkers soundly treat certain variables and expressions as having a
 subtype of their declared or defaulted (Section&#XA0;<A HREF="#defaults">19.1.1</A>)
 type. This functionality
-never introduces unsoundness nor causes an error to be missed.</P><P>By default, all checkers, including new checkers that you write, can take
-advantage of this functionality. Most of the time, users don&#X2019;t have to
-think about, and may not even notice, this feature of the framework. The
+never introduces unsoundness nor causes an error to be missed.</P><P>As an example, suppose you write</P><PRE CLASS="verbatim">  @Nullable String myVar = "hello";
+  myVar.hashCode();
+</PRE><P>Calling <TT>hashCode()</TT> on a possibly-null value may result in a null pointer
+exception. That never happens in this case, because the type-checker
+treats <TT>myVar</TT> as having type <TT>@NonNull String</TT>, which is a subtype of its
+declared type.</P><P>Array element types and generic arguments are never changed by type
+refinement. Changing these components of a type never yields a subtype of
+the declared type. For example, <TT>List&lt;Number&gt;</TT> is <EM>not</EM> a
+subtype of <TT>List&lt;Object&gt;</TT> and <TT>Number[]</TT> is not a subtype of
+<TT>Object[]</TT>.</P><P>By default, all checkers, including new checkers that you write,
+automatically incorporate type refinement. Most of the time, users don&#X2019;t
+have to think about, and may not even notice, type refinement. The
 checkers simply do the right thing even when a programmer omits an
 annotation on a local variable, or when a programmer writes an
 unnecessarily general type in a declaration.</P><P>The functionality has a variety of names: automatic type refinement,
@@ -4005,7 +4018,7 @@ automatically, with no need for the user to supply a command-line option.</P><P>
 using an external tool, the Annotation File Utilities
 (<A HREF="http://types.cs.washington.edu/annotation-file-utilities/"><TT>http://types.cs.washington.edu/annotation-file-utilities/</TT></A>).
 However, this process does not suffer the limitations of stub files
-(Section&#XA0;<A HREF="#stub-limitations">21.2.4</A>).</P><!--TOC section Using stub classes-->
+(Section&#XA0;<A HREF="#stub-limitations">21.2.5</A>).</P><!--TOC section Using stub classes-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="stub">21.2</A><A NAME="stub-creating-and-using"></A>&#XA0;&#XA0;Using stub classes</H2><!--SEC END --><P>A stub file contains &#X201C;stub classes&#X201D; that contain annotated signatures,
 but no method bodies. A
 checker uses the annotated signatures at compile time, instead of or in
@@ -4104,8 +4117,17 @@ files:
 found. Annotations on unknown classes and methods are silently
 ignored. Use this option to ensure that all stub file entries could be
 resolved.
-<TT>-AstubDebug</TT> outputs debug messages while parsing stub files.</P><!--TOC subsection Limitations-->
-<H3 CLASS="subsection"><A NAME="stub-limitations"><!--SEC ANCHOR -->21.2.4&#XA0;&#XA0;Limitations</A></H3><!--SEC END --><P>The stub file reader has several limitations. We will fix these in a
+<TT>-AstubDebug</TT> outputs debug messages while parsing stub files.</P><!--TOC subsection Troubleshooting-->
+<H3 CLASS="subsection"><A NAME="stub-troubleshooting"><!--SEC ANCHOR -->21.2.4&#XA0;&#XA0;Troubleshooting</A></H3><!--SEC END --><P>An error is issued if a stub file has a typo or the API method does not
+exist.</P><P>Fix this error by removing the extra L in the method name:
+</P><PRE CLASS="verbatim">StubParser: Method isLLowerCase(char) not found in type java.lang.Character
+</PRE><P>Fix this error by removing the method <TT>enableForgroundNdefPush(...)</TT> from
+the stub file, because it is not defined in class <TT>android.nfc.NfcAdapter</TT>
+in the version of the library you are using:
+</P><PRE CLASS="verbatim">StubParser: Method enableForegroundNdefPush(Activity,NdefPushCallback) 
+      not found in type android.nfc.NfcAdapter
+</PRE><!--TOC subsection Limitations-->
+<H3 CLASS="subsection"><A NAME="stub-limitations"><!--SEC ANCHOR -->21.2.5&#XA0;&#XA0;Limitations</A></H3><!--SEC END --><P>The stub file reader has several limitations. We will fix these in a
 future release.</P><UL CLASS="itemize"><LI CLASS="li-itemize">
 The receiver is written after the method parameter list, instead of as an
 explicit first parameter. That is, instead of<PRE CLASS="verbatim">     returntype methodname(@Annotations C this, params);
@@ -4174,7 +4196,7 @@ of those.
 The Javadoc documentation of the framework and the checkers is in the
 distribution and is also available online at
 <A HREF="http://types.cs.washington.edu/checker-framework/current/doc/"><TT>http://types.cs.washington.edu/checker-framework/current/doc/</TT></A>.</P><P>If you write a new checker and wish to advertise it to the world, let us
-know so we can mention it in the Checker Framework manual, link to
+know so we can mention it in the Checker Framework Manual, link to
 it from the webpages, or include it in the Checker Framework distribution.
 For examples, see Chapters&#XA0;<A HREF="#typestate-checker">16</A>
 and&#XA0;<A HREF="#third-party-checkers">17</A>.</P><!--TOC section Relationship of the Checker Framework to other tools-->
@@ -4326,18 +4348,24 @@ qualifier hierarchy; see the Nullness checker&#X2019;s implementation for an
 example.</P><P>Recall that defaults are distinct
 from implicit annotations; see Sections&#XA0;<A HREF="#effective-qualifier">19.1</A>
 and&#XA0;<A HREF="#writing-type-introduction">22.4</A>.</P><!--TOC subsection Completeness of the type hierarchy-->
-<H3 CLASS="subsection"><A NAME="bottom-and-top-qualifier"><!--SEC ANCHOR -->22.3.4&#XA0;&#XA0;Completeness of the type hierarchy</A></H3><!--SEC END --><P><A NAME="bottom-qualifier"></A></P><!--TOC paragraph Bottom qualifier-->
+<H3 CLASS="subsection"><A NAME="bottom-and-top-qualifier"><!--SEC ANCHOR -->22.3.4&#XA0;&#XA0;Completeness of the type hierarchy</A></H3><!--SEC END --><P>When you define a type system, its type hierarchy should generally be a
+complete lattice &#X2014; that is, there should be a top type that is a
+supertype of all other types, and there should be a bottom type that is a
+subtype of all other types.</P><P><A NAME="bottom-qualifier"></A></P><!--TOC paragraph Bottom qualifier-->
 <H5 CLASS="paragraph"><!--SEC ANCHOR -->Bottom qualifier</H5><!--SEC END --><P>
 It is usually a good idea to have a bottom qualifier in your type hierarchy
 &#X2014; a qualifier that is a (direct or indirect) subtype of every other
-qualifier. For instance, the hierarchy of Figure&#XA0;<A HREF="#fig:igj-hierarchy">13.1</A> lacks
+qualifier.</P><P>The bottom qualifier is the natural type for the <TT>null</TT>
+value, which can be viewed as having any type at all. Without a bottom
+qualifier, type-checking becomes less precise. In particular, this code
+will not type-check unless <TT>null</TT> has the bottom type:
+</P><PRE CLASS="verbatim">&lt;T&gt; T f() {
+    return null;
+</PRE><P>Users should never write the bottom qualifier explicitly; it is merely used
+for the <TT>null</TT> value.</P><P>The hierarchy of Figure&#XA0;<A HREF="#fig:igj-hierarchy">13.1</A> lacks
 a bottom qualifier, because there is no qualifier that is a subtype of both
 <TT>@Immutable</TT> and <TT>@Mutable</TT>.
-The bottom qualifier is the natural type for the <TT>null</TT>
-value, which can be viewed as having any type at all. Without a bottom
-qualifier, type-checking becomes less precise.
-Users should never write the bottom qualifier explicitly; it is merely used
-for the <TT>null</TT> value.</P><P>The actual IGJ hierarchy does contain a (non-user-visible) bottom qualifier,
+The actual IGJ hierarchy does contain a (non-user-visible) bottom qualifier,
 defined like this:</P><PRE CLASS="verbatim">  @TypeQualifier
   @SubtypeOf({Mutable.class, Immutable.class, I.class})
   @Target({}) // forbids a programmer from writing it in a program
@@ -4783,14 +4811,14 @@ new directory named <TT>jsr308</TT>.<PRE CLASS="verbatim">  export JSR308=$HOME/
   unzip checkers.zip
   chmod +x checker-framework/checkers/binary/javac
   checker-framework/checkers/binary/javac -version
-</PRE><P>The output of the last command should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.2
+</PRE><P>The output of the last command should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.3
 </PRE></LI><LI CLASS="li-enumerate">Place the following commands in your <TT>.bashrc</TT> file:
 <PRE CLASS="verbatim">  export JSR308=$HOME/jsr308
   export CHECKERS=$JSR308/checker-framework/checkers
   export PATH=$CHECKERS/binary:${PATH}
 </PRE><P>Also execute them on the command line, or log out and back in. Then,
 verify that the installation works. From the command line, run:</P><PRE CLASS="verbatim">  javac -version
-</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.2
+</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.3
 </PRE></LI></OL><P>That&#X2019;s all there is to it! Now you are ready to start using the checkers with
 the new <TT>javac</TT> compiler.</P><!--TOC subsection Windows installation-->
 <H3 CLASS="subsection"><A NAME="windows-installation"><!--SEC ANCHOR -->23.1.2&#XA0;&#XA0;Windows installation</A></H3><!--SEC END --><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">Download the latest Checker Framework distribution
@@ -4806,7 +4834,7 @@ the <TT>checkers</TT> directory, then Select <TT>Extract all files</TT>, and use
 <TT>C:</TT><TT>\</TT><TT>Program Files</TT><TT>\</TT><TT>checker-framework</TT> folder.
 </LI><LI CLASS="li-enumerate">Verify that the installation works. From a Windows command prompt, run:<PRE CLASS="verbatim">  set CHECKERS = C:\Program Files\checker-framework\checkers
   java -jar C:%CHECKERS%\binary\checkers.jar -version
-</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.2
+</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.3
 </PRE></LI></OL></LI><LI CLASS="li-enumerate">In order to use the updated compiler when you type <TT>javac</TT>, add the
 directory <TT>C:</TT><TT>\</TT><TT>Program Files</TT><TT>\</TT><TT>checker-framework</TT><TT>\</TT><TT>checkers</TT><TT>\</TT><TT>binary</TT> to the
 beginning of your path variable. Also set a CHECKERS variable.<P>To set an environment variable, you have two options: make the change
@@ -4831,7 +4859,7 @@ dialog box, move the cursor to the beginning of the string in the
 <CODE>%CHECKERS%</CODE> environment variable) followed by a
 semicolon (<TT>;</TT>).<P>Similarly, set the CHECKERS variable.</P><P>This is a permanent change that only needs to be done once ever.
 </P></LI></UL><P>Now, verify that the installation works. From the command line, run:</P><PRE CLASS="verbatim">  javac -version
-</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.2
+</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.3
 </PRE></LI></OL><!--TOC section Ant task-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="ant-task">23.2</A>&#XA0;&#XA0;Ant task</H2><!--SEC END --><P>If you use the <A HREF="http://ant.apache.org/">Ant</A> build tool to compile
 your software, then you can add an Ant task that runs a checker. We assume
@@ -5091,9 +5119,11 @@ the answers, or other questions to include here.</P><P>There is a separate FAQ f
 <A HREF="#faq-type-checking-vs-bug-detectors">24.15</A>: Why not just use a bug detector (like FindBugs)?<BR>
 <A HREF="#faq-jml">24.16</A>: How does pluggable type-checking compare with JML?<BR>
 <A HREF="#faq-no-annotation-on-types-and-declarations">24.17</A>: Why shouldn&#X2019;t a qualifier apply to both types and declarations?<BR>
-<A HREF="#faq-array-syntax-meaning">24.19</A>: What is the meaning of array annotations such as <TT>@NonNull Object @Nullable []</TT>?<BR>
-<A HREF="#faq-list-map-nonnull-typeargs">24.20</A>: Why are the type parameters to <TT>List</TT> and <TT>Map</TT> annotated as <TT>@NonNull</TT>?<BR>
-<A HREF="#faq-checker-framework-part-of-java">24.21</A>: Is the Checker Framework an official part of Java?<BR>
+<A HREF="#faq-receiver">24.18</A>: What is a &#X201C;receiver&#X201D;?<BR>
+<A HREF="#faq-annotation-after-type">24.19</A>: What is the meaning of an annotation after a type, such as <TT>@NonNull Object @Nullable</TT>?<BR>
+<A HREF="#faq-array-syntax-meaning">24.20</A>: What is the meaning of array annotations such as <TT>@NonNull Object @Nullable []</TT>?<BR>
+<A HREF="#faq-list-map-nonnull-typeargs">24.21</A>: Why are the type parameters to <TT>List</TT> and <TT>Map</TT> annotated as <TT>@NonNull</TT>?<BR>
+<A HREF="#faq-checker-framework-part-of-java">24.22</A>: Is the Checker Framework an official part of Java?<BR>
 </P><!--TOC section Are type annotations easy to read and write?-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="faq-ease-of-use">24.1</A>&#XA0;&#XA0;Are type annotations easy to read and write?</H2><!--SEC END --><P>The paper
 <A HREF="http://homes.cs.washington.edu/~mernst/pubs/pluggable-checkers-issta2008-abstract.html">&#X201C;Practical
@@ -5341,8 +5371,12 @@ Object</TT> in the following declaration:</P><PRE CLASS="verbatim">  class MyCla
   myB.requiresA()    // OK
   myB.requiresB()    // OK
 </PRE><P>The invocation <TT>myA.requiresB()</TT> does not type-check because the actual
-argument&#X2019;s type is not a subtype of the formal parameter&#X2019;s type.</P><!--TOC section What is the meaning of array annotations such as <TT>@NonNull Object @Nullable []</TT>?-->
-<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="faq-array-syntax-meaning">24.19</A>&#XA0;&#XA0;What is the meaning of array annotations such as <TT>@NonNull Object @Nullable []</TT>?</H2><!--SEC END --><P>You should parse this as:
+argument&#X2019;s type is not a subtype of the formal parameter&#X2019;s type.</P><!--TOC section What is the meaning of an annotation after a type, such as <TT>@NonNull Object @Nullable</TT>?-->
+<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="faq-annotation-after-type">24.19</A>&#XA0;&#XA0;What is the meaning of an annotation after a type, such as <TT>@NonNull Object @Nullable</TT>?</H2><!--SEC END --><P>In a type such as <TT>@NonNull Object @Nullable []</TT>, it may appear that the
+<TT>@Nullable</TT> annotation is written <EM>after</EM> the type <TT>Object</TT>. In
+fact, <TT>@Nullable</TT> modifies <TT>[]</TT>. See the next FAQ, about array
+annotations (Section&#XA0;<A HREF="#faq-array-syntax-meaning">24.20</A>).</P><!--TOC section What is the meaning of array annotations such as <TT>@NonNull Object @Nullable []</TT>?-->
+<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="faq-array-syntax-meaning">24.20</A>&#XA0;&#XA0;What is the meaning of array annotations such as <TT>@NonNull Object @Nullable []</TT>?</H2><!--SEC END --><P>You should parse this as:
 (<B><TT>@NonNull Object</TT></B>) (<B><TT>@Nullable []</TT></B>).
 Each annotation precedes the component of the type that it qualifies.</P><P>Thus,
 <TT>@NonNull Object @Nullable []</TT> is a possibly-null array of non-null
@@ -5360,7 +5394,7 @@ older tools, you will find this incompatibility confusing.
 You will have to live with it until the older
 tool is updated to conform to the Java specification, or until you
 transition to a newer tool that conforms to the Java specification.</P><!--TOC section Why are the type parameters to <TT>List</TT> and <TT>Map</TT> annotated as <TT>@NonNull</TT>?-->
-<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="faq-list-map-nonnull-typeargs">24.20</A>&#XA0;&#XA0;Why are the type parameters to <TT>List</TT> and <TT>Map</TT> annotated as <TT>@NonNull</TT>?</H2><!--SEC END --><P>The annotation on <TT>java.util.Collection</TT> only allows non-null elements:</P><PRE CLASS="verbatim">  public interface Collection&lt;E extends @NonNull Object&gt; {
+<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="faq-list-map-nonnull-typeargs">24.21</A>&#XA0;&#XA0;Why are the type parameters to <TT>List</TT> and <TT>Map</TT> annotated as <TT>@NonNull</TT>?</H2><!--SEC END --><P>The annotation on <TT>java.util.Collection</TT> only allows non-null elements:</P><PRE CLASS="verbatim">  public interface Collection&lt;E extends @NonNull Object&gt; {
     ...
   }
 </PRE><P>Thus, you will get a type error if you write code like
@@ -5424,7 +5458,7 @@ whenever you use a collection that may contain <TT>null</TT> elements in
 contradiction to its documentation. Fortunately, such uses are relatively
 rare.</P><P>For more details on suppressing nullness warnings, see
 Section&#XA0;<A HREF="#suppressing-warnings-nullness">3.4</A>.</P><!--TOC section Is the Checker Framework an official part of Java?-->
-<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="faq-checker-framework-part-of-java">24.21</A>&#XA0;&#XA0;Is the Checker Framework an official part of Java?</H2><!--SEC END --><P>The Checker Framework is not an official part of Java, though it relies on
+<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="faq-checker-framework-part-of-java">24.22</A>&#XA0;&#XA0;Is the Checker Framework an official part of Java?</H2><!--SEC END --><P>The Checker Framework is not an official part of Java, though it relies on
 type annotations, which are part of Java 8. See the
 <A HREF="http://types.cs.washington.edu/jsr308/jsr308-faq.html#checkers-in-java">Type
 Annotations (JSR 308) FAQ</A> for more details.</P><HR><!--TOC chapter Troubleshooting and getting help-->
@@ -5629,8 +5663,8 @@ Example command:<PRE CLASS="verbatim">  export CLASSPATH=${CLASSPATH}:$JAVA_HOME
 <PRE CLASS="verbatim">  cd $JSR308/checker-framework/checkers
   ant all-tests
 </PRE></LI><LI CLASS="li-itemize">Run the Nullness checker examples (see
-Section&#XA0;<A HREF="#nullness-example">3.8</A>).</LI></UL></LI></OL><!--TOC subsection Build the Checker Framework manual (this document)-->
-<H3 CLASS="subsection"><!--SEC ANCHOR -->25.3.5&#XA0;&#XA0;Build the Checker Framework manual (this document)</H3><!--SEC END --><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">
+Section&#XA0;<A HREF="#nullness-example">3.8</A>).</LI></UL></LI></OL><!--TOC subsection Build the Checker Framework Manual (this document)-->
+<H3 CLASS="subsection"><!--SEC ANCHOR -->25.3.5&#XA0;&#XA0;Build the Checker Framework Manual (this document)</H3><!--SEC END --><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">
 To build the manual you will need plume-bib (<A HREF="http://code.google.com/p/plume-bib/"><TT>http://code.google.com/p/plume-bib/</TT></A>) and H<FONT SIZE=2><sup>E</sup></FONT>V<FONT SIZE=2><sup>E</sup></FONT>A (<A HREF="http://hevea.inria.fr/"><TT>http://hevea.inria.fr/</TT></A>) installed.</LI><LI CLASS="li-enumerate">Run <TT>make</TT> in the <TT>checkers/manual</TT> directory to build both the PDF and HTML versions of the manual.
 </LI></OL><!--TOC section Learning more-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="learning-more">25.4</A>&#XA0;&#XA0;Learning more</H2><!--SEC END --><P>The technical paper &#X201C;Practical pluggable types for Java&#X201D;&#XA0;[<A HREF="#PapiACPE2008">PAC<SUP>+</SUP>08</A>]
