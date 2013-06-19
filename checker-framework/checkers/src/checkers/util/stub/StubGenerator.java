@@ -1,6 +1,7 @@
 package checkers.util.stub;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -36,6 +37,7 @@ public class StubGenerator {
     /** the package of the class being processed */
     // As an optimization, it is ended with a '.'
     private String currentPackage = null;
+
 
     /**
      * Constructs an instanceof {@code IndexGenerator} that outputs to
@@ -111,6 +113,18 @@ public class StubGenerator {
      * @param typeElement
      */
     private void printClass(TypeElement typeElement) {
+    	printClass(typeElement, null);
+    }
+        /**
+         * helper method that outputs the index for the provided class.
+         *
+         * @param typeElement
+         */
+        private void printClass(TypeElement typeElement, String outerClass) {
+        	
+        
+        List<TypeElement> innerClass = new ArrayList<TypeElement>();
+     
         indent();
         if (typeElement.getKind() == ElementKind.INTERFACE)
             out.print("interface");
@@ -120,7 +134,12 @@ public class StubGenerator {
             return;
 
         out.print(' ');
-        out.print(typeElement.getSimpleName());
+        if(outerClass !=null){
+        	out.print(outerClass+"$");
+        }
+            out.print(typeElement.getSimpleName());
+
+        
 
         // Type parameters
         if (!typeElement.getTypeParameters().isEmpty()) {
@@ -149,11 +168,16 @@ public class StubGenerator {
         currentIndention = currentIndention + INDENTION;
 
 
-        printTypeMembers(typeElement.getEnclosedElements());
+        printTypeMembers(typeElement.getEnclosedElements(), innerClass);
 
         currentIndention = tempIndention;
         indent();
         out.println("}");
+        
+        for(TypeElement element: innerClass){
+        	printClass(element,typeElement.getSimpleName().toString());
+        }
+        
     }
 
     /**
@@ -161,24 +185,27 @@ public class StubGenerator {
      * a class.
      *
      * @param members list of the class members
+     * @param innerClass 
      */
-    private void printTypeMembers(List<? extends Element> members) {
+    private void printTypeMembers(List<? extends Element> members, List<TypeElement> innerClass) {
         for (Element element : members) {
             if (isPublicOrProtected(element))
-                printMember(element);
+                printMember(element,innerClass);
         }
     }
 
     /**
      * Helper method that outputs the declaration of the member
+     * @param innerClass 
      */
-    private void printMember(Element member) {
+    private void printMember(Element member, List<TypeElement> innerClass) {
         if (member.getKind().isField())
             printFieldDecl((VariableElement)member);
         else if (member instanceof ExecutableElement)
             printMethodDecl((ExecutableElement)member);
         else if (member instanceof TypeElement)
-            printClass((TypeElement)member);
+            innerClass.add((TypeElement) member);
+       
     }
 
     /**
@@ -191,6 +218,8 @@ public class StubGenerator {
         // if protected, indicate that, but not public
         if (field.getModifiers().contains(Modifier.PROTECTED))
             out.print("protected ");
+        if (field.getModifiers().contains(Modifier.FINAL))
+            out.print("final ");
 
         out.print(formatType(field.asType()));
 
@@ -209,6 +238,8 @@ public class StubGenerator {
         // if protected, indicate that, but not public
         if (method.getModifiers().contains(Modifier.PROTECTED))
             out.print("protected ");
+        if (method.getModifiers().contains(Modifier.STATIC))
+            out.print("static ");
 
         // print Generic arguments
         if (!method.getTypeParameters().isEmpty()) {

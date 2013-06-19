@@ -197,6 +197,7 @@ public class StubUtil {
                 for (Iterator<Parameter> i = n.getParameters().iterator(); i.hasNext();) {
                     Parameter p = i.next();
                     p.accept(this, arg);
+                    
                     if (i.hasNext()) {
                         sb.append(",");
                     }
@@ -214,8 +215,7 @@ public class StubUtil {
                 for (Iterator<Parameter> i = n.getParameters().iterator(); i.hasNext();) {
                     Parameter p = i.next();
                     p.accept(this, arg);
-                    if (p.isVarArgs())
-                        sb.append("[]");
+         
                     if (i.hasNext()) {
                         sb.append(",");
                     }
@@ -229,7 +229,10 @@ public class StubUtil {
             if (n.getId().getArrayCount() > 0) {
                 SourceChecker.errorAbort("StubUtil: put array brackets on the type, not the variable: " + n);
             }
+           
             n.getType().accept(this, arg);
+            if (n.isVarArgs())
+                sb.append("[]");
         }
 
         // Types

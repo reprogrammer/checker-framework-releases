@@ -1,7 +1,25 @@
-Version 1.6.3, 02 May 2013
+Version 1.6.4, 01 June 2013
+
+User-visible framework improvements:
+    StubGenerator now generates stubs that can be read by the StubParser.
+
+Maven plugin:
+    The Maven plugin no longer requires the Maven project's output directory to exist in order to run the Checker Framework.  However, if you ask the Checker Framework to generate class files then the output directory will be created.
+
+Documentation:
+  Improved the Maven plugin instructions in the Checker Framework manual.
+  Improved the discussion of why to define both a bottom and a top qualifier in the Checker Framework manual.
+  Update FAQ to discuss that some other tools incorrectly interpret array declarations.
+
+----------------------------------------------------------------------
+
+Version 1.6.3, 01 May 2013
 
 Eclipse plugin bug fixes:
   The javac argument files used by the Eclipse plugin now properly escape file paths.  Windows users should no longer encounter errors about missing built-in checkers.
+
+Documentation: 
+  Add FAQ "What is the meaning of an annotation after a type?"
 
 ----------------------------------------------------------------------
 

@@ -11,6 +11,7 @@ import javax.lang.model.util.Elements;
 import checkers.quals.*;
 import checkers.source.SourceChecker;
 import checkers.types.*;
+import checkers.types.AnnotatedTypeMirror.AnnotatedExecutableType;
 import checkers.types.AnnotatedTypeMirror.*;
 import checkers.types.visitors.AnnotatedTypeScanner;
 
@@ -391,12 +392,26 @@ public class QualifierDefaults {
                 if ( elt.getKind() == ElementKind.PARAMETER &&
                         t == type) {
                     doApply(t, qual);
-                } else if (elt.getKind() == ElementKind.METHOD &&
+                } else if ((elt.getKind() == ElementKind.METHOD || elt.getKind() == ElementKind.CONSTRUCTOR) &&
                         t.getKind() == TypeKind.EXECUTABLE &&
                         t == type) {
+        
                     for ( AnnotatedTypeMirror atm : ((AnnotatedExecutableType)t).getParameterTypes()) {
                         doApply(atm, qual);
                     }
+                }
+                break;
+            }
+            case RECEIVERS: {
+                if ( elt.getKind() == ElementKind.PARAMETER &&
+                        t == type && "this".equals(elt.getSimpleName())) {
+                    // TODO: comparison against "this" is ugly, won't work
+                    // for all possible names for receiver parameter.
+                    doApply(t, qual);
+                } else if ((elt.getKind() == ElementKind.METHOD) &&
+                        t.getKind() == TypeKind.EXECUTABLE &&
+                        t == type) {
+                        doApply(((AnnotatedExecutableType)t).getReceiverType(), qual);
                 }
                 break;
             }

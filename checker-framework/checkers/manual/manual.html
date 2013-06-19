@@ -51,7 +51,7 @@ TD P{margin:0px;}
 <BODY >
 <!--HEVEA command line is: hevea -exec xxdate.exe urlhref.hva manual.tex -->
 <!--CUT DEF chapter 1 --><TABLE CLASS="title"><TR><TD><H1 CLASS="titlemain">The Checker Framework Manual:<BR>
-Custom pluggable types for Java</H1><H3 CLASS="titlerest"><A HREF="http://types.cs.washington.edu/checker-framework/"><TT>http://types.cs.washington.edu/checker-framework/</TT></A></H3><H3 CLASS="titlerest">Version 1.6.3 (1 May 2013)</H3></TD></TR>
+Custom pluggable types for Java</H1><H3 CLASS="titlerest"><A HREF="http://types.cs.washington.edu/checker-framework/"><TT>http://types.cs.washington.edu/checker-framework/</TT></A></H3><H3 CLASS="titlerest">Version 1.6.4 (1 Jun 2013)</H3></TD></TR>
 </TABLE><P><B>For the impatient:</B>
 Section&#XA0;<A HREF="#installation">1.2</A>
 describes how to <B>install and use</B> pluggable type-checkers.</P><!--TOC chapter Contents-->
@@ -373,7 +373,7 @@ alias. For example:</P><PRE CLASS="verbatim">  # Unix
   # Windows
   doskey javacheck=java -jar %CHECKERS%\binary\checkers.jar $*
 </PRE></LI></UL></LI></OL><P>To ensure that it was installed properly, run <TT>javac -version</TT> (possibly using the
-full pathname to <TT>javac</TT> or the alias, if you did not add the Type Annotations <TT>javac</TT> to your path).</P><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.3
+full pathname to <TT>javac</TT> or the alias, if you did not add the Type Annotations <TT>javac</TT> to your path).</P><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.4
 </PRE><P>That&#X2019;s all there is to it! Now you are ready to start using the checkers.</P><P>Section&#XA0;<A HREF="#example-use">1.3</A> walks you through a simple example. More detailed
 instructions for using a checker appear in Chapter&#XA0;<A HREF="#using-a-checker">2</A>.
 There is also a <A HREF="http://types.cs.washington.edu/checker-framework/tutorial/">tutorial</A>
@@ -515,7 +515,7 @@ and
 tIDE (Section&#XA0;<A HREF="#tide">23.7</A>), and about customizing other IDEs and build tools.)
 Remember that you must be using the
 Type Annotations version of <TT>javac</TT>, which you already installed (see Section&#XA0;<A HREF="#installation">1.2</A>).</P><P>Two concrete examples (using the Nullness checker) are:</P><PRE CLASS="verbatim">  javac -processor checkers.nullness.NullnessChecker MyFile.java
-  java -jar $CHECKERS/binary/checkers.jar MyFile.java
+  java -jar $CHECKERS/binary/checkers.jar -processor checkers.nullness.NullnessChecker MyFile.java
 </PRE><P>Note that the two invocations above are equivalent. Each one invokes the
 Checker Framework compiler, which in turn invokes the Type Annotations compiler
 with an annotated JDK on its classpath. For more information on annotated
@@ -4067,10 +4067,10 @@ The only required import statements are the ones to import type
 annotations. Import statements for types are optional.<P>Enum constants in annotations need to be either fully qualified
 or imported.
 For example, one has to either write the enum constant <TT>ANY</TT> in
-fully-qualified form:</P><PRE CLASS="verbatim">@FlowSources(sparta.checkers.quals.FlowSources.FlowSource.ANY)
-</PRE><P>or correctly import the enum class:</P><PRE CLASS="verbatim">import sparta.checkers.quals.FlowSources.FlowSource;
+fully-qualified form:</P><PRE CLASS="verbatim">@Sources(sparta.checkers.quals.FlowPermission.ANY)
+</PRE><P>or correctly import the enum class:</P><PRE CLASS="verbatim">import sparta.checkers.quals.FlowPermission;
 ...
-@FlowSources(FlowSource.ANY)
+@Sources(FlowPermission.ANY)
 </PRE><P>Importing all packages from a class (<TT>import my.package.*;</TT>) only
 considers annotations from that package; enum types need to be
 explicitly imported.</P></DD><DT CLASS="dt-description"></DT><DD CLASS="dd-description"><B>Multiple classes and packages:</B>
@@ -4344,25 +4344,28 @@ files that the checker reads.</P><P>Alternately, the type system designer may sp
 by calling the
 <A HREF="doc/checkers/util/QualifierDefaults.html#addAbsoluteDefault(javax.lang.model.element.AnnotationMirror,%20checkers.quals.DefaultLocation)"><TT>QualifierDefaults.addAbsoluteDefault</TT></A>
 method. You may do this even if you have declaratively defined the
-qualifier hierarchy; see the Nullness checker&#X2019;s implementation for an
+qualifier hierarchy; see the Nullness Checker&#X2019;s implementation for an
 example.</P><P>Recall that defaults are distinct
 from implicit annotations; see Sections&#XA0;<A HREF="#effective-qualifier">19.1</A>
 and&#XA0;<A HREF="#writing-type-introduction">22.4</A>.</P><!--TOC subsection Completeness of the type hierarchy-->
 <H3 CLASS="subsection"><A NAME="bottom-and-top-qualifier"><!--SEC ANCHOR -->22.3.4&#XA0;&#XA0;Completeness of the type hierarchy</A></H3><!--SEC END --><P>When you define a type system, its type hierarchy should generally be a
 complete lattice &#X2014; that is, there should be a top type that is a
 supertype of all other types, and there should be a bottom type that is a
-subtype of all other types.</P><P><A NAME="bottom-qualifier"></A></P><!--TOC paragraph Bottom qualifier-->
+subtype of all other types.
+Furthermore, it is best if the top type and bottom type are defined
+explicitly for the type system, rather than (say) reusing a qualifier from the
+Checker Framework such as <TT>@Unqualified</TT>.</P><P><A NAME="bottom-qualifier"></A></P><!--TOC paragraph Bottom qualifier-->
 <H5 CLASS="paragraph"><!--SEC ANCHOR -->Bottom qualifier</H5><!--SEC END --><P>
-It is usually a good idea to have a bottom qualifier in your type hierarchy
+Your type hierarchy should have a bottom qualifier
 &#X2014; a qualifier that is a (direct or indirect) subtype of every other
-qualifier.</P><P>The bottom qualifier is the natural type for the <TT>null</TT>
-value, which can be viewed as having any type at all. Without a bottom
-qualifier, type-checking becomes less precise. In particular, this code
+qualifier.</P><P>Your type system should give <TT>null</TT> the bottom type. (The only exception
+is if the type system has special treatment for <TT>null</TT> values, as the
+Nullness Checker does.) This legal code
 will not type-check unless <TT>null</TT> has the bottom type:
 </P><PRE CLASS="verbatim">&lt;T&gt; T f() {
     return null;
 </PRE><P>Users should never write the bottom qualifier explicitly; it is merely used
-for the <TT>null</TT> value.</P><P>The hierarchy of Figure&#XA0;<A HREF="#fig:igj-hierarchy">13.1</A> lacks
+for the <TT>null</TT> value.</P><P>The hierarchy shown in Figure&#XA0;<A HREF="#fig:igj-hierarchy">13.1</A> lacks
 a bottom qualifier, because there is no qualifier that is a subtype of both
 <TT>@Immutable</TT> and <TT>@Mutable</TT>.
 The actual IGJ hierarchy does contain a (non-user-visible) bottom qualifier,
@@ -4377,17 +4380,22 @@ defined like this:</P><PRE CLASS="verbatim">  @TypeQualifier
 Similarly, it is usually a good idea to have a top qualifier in your type
 hierarchy &#X2014; a qualifier that is a (direct or indirect) supertype of every
 other qualifier. When a type system lacks a top qualifier (or any other
-qualifier), then users lose flexibility in expressing defaults.</P><P>For instance, the <TT>@Encrypted</TT> type system of
-Section&#XA0;<A HREF="#encrypted-example">15.2</A> lacks an explicit top qualifier:</P><PRE CLASS="verbatim">  @TypeQualifier
+qualifier), then users lose flexibility in expressing defaults.</P><P>Furthermore, it is most convenient to users if the top qualifier is defined
+by the type system. An example of a type system that does
+<EM>not</EM> do that is the <TT>@Encrypted</TT> type system of
+Section&#XA0;<A HREF="#encrypted-example">15.2</A>. It lacks its own explicit top qualifier and instead
+uses <TT>@Unqualified</TT>, which is shared across multiple type systems:</P><PRE CLASS="verbatim">  @TypeQualifier
   @SubtypeOf(Unqualified.class)
   @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
   public @interface Encrypted {}
-</PRE><P>The default is
-<TT>@Unqualified</TT>, and there is no way for a user to change that.
-(A user could not specify <TT>@DefaultQualifier(Unqualified.class)</TT>,
-because many type systems share <TT>@Unqualified</TT> and it is not clear which
-type system the annotation is intended to refer to.)</P><P>By contrast, the Nullness type system has an explicit qualifier for every
-possible meaning: both <TT>@</TT><A HREF="doc/checkers/nullness/quals/Nullable.html"><TT>Nullable</TT></A> and
+</PRE><P>It can be convenient to use <TT>@Unqualified</TT> as the top type to avoid
+having to define your own top type. The disadvantage is that then there is no
+way for a user to change the default qualifier. A user could not specify
+<TT>@DefaultQualifier(Unqualified.class)</TT>,
+because many type systems share <TT>@Unqualified</TT> and it would apply to every
+type system, which is unlikely to be desired.</P><P>It is best if a type system as an explicit qualifier for every
+possible meaning. For example,
+the Nullness type system has both <TT>@</TT><A HREF="doc/checkers/nullness/quals/Nullable.html"><TT>Nullable</TT></A> and
 <TT>@</TT><A HREF="doc/checkers/nullness/quals/NonNull.html"><TT>NonNull</TT></A>. Because it has no built-in meaning
 for unannotated types; a user may specify a default qualifier. This
 greater flexibility for the user is usually preferable.</P><P>There are reasons to omit the top qualifier.
@@ -4542,7 +4550,7 @@ point, which we call the checker class, serves two
 roles: an interface to the compiler and a factory for constructing
 type-system classes.</P><P>Because the Checker Framework provides reasonable defaults, oftentimes the
 checker class has no work to do. Here are the complete definitions of the
-checker classes for the Interning and Nullness checkers:</P><PRE CLASS="verbatim">  @TypeQualifiers({ Interned.class, PolyInterned.class })
+checker classes for the Interning and Nullness Checkers:</P><PRE CLASS="verbatim">  @TypeQualifiers({ Interned.class, PolyInterned.class })
   @SupportedLintOptions({"dotequals"})
   public final class InterningChecker extends BaseTypeChecker { }
 
@@ -4811,14 +4819,14 @@ new directory named <TT>jsr308</TT>.<PRE CLASS="verbatim">  export JSR308=$HOME/
   unzip checkers.zip
   chmod +x checker-framework/checkers/binary/javac
   checker-framework/checkers/binary/javac -version
-</PRE><P>The output of the last command should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.3
+</PRE><P>The output of the last command should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.4
 </PRE></LI><LI CLASS="li-enumerate">Place the following commands in your <TT>.bashrc</TT> file:
 <PRE CLASS="verbatim">  export JSR308=$HOME/jsr308
   export CHECKERS=$JSR308/checker-framework/checkers
   export PATH=$CHECKERS/binary:${PATH}
 </PRE><P>Also execute them on the command line, or log out and back in. Then,
 verify that the installation works. From the command line, run:</P><PRE CLASS="verbatim">  javac -version
-</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.3
+</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.4
 </PRE></LI></OL><P>That&#X2019;s all there is to it! Now you are ready to start using the checkers with
 the new <TT>javac</TT> compiler.</P><!--TOC subsection Windows installation-->
 <H3 CLASS="subsection"><A NAME="windows-installation"><!--SEC ANCHOR -->23.1.2&#XA0;&#XA0;Windows installation</A></H3><!--SEC END --><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">Download the latest Checker Framework distribution
@@ -4834,7 +4842,7 @@ the <TT>checkers</TT> directory, then Select <TT>Extract all files</TT>, and use
 <TT>C:</TT><TT>\</TT><TT>Program Files</TT><TT>\</TT><TT>checker-framework</TT> folder.
 </LI><LI CLASS="li-enumerate">Verify that the installation works. From a Windows command prompt, run:<PRE CLASS="verbatim">  set CHECKERS = C:\Program Files\checker-framework\checkers
   java -jar C:%CHECKERS%\binary\checkers.jar -version
-</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.3
+</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.4
 </PRE></LI></OL></LI><LI CLASS="li-enumerate">In order to use the updated compiler when you type <TT>javac</TT>, add the
 directory <TT>C:</TT><TT>\</TT><TT>Program Files</TT><TT>\</TT><TT>checker-framework</TT><TT>\</TT><TT>checkers</TT><TT>\</TT><TT>binary</TT> to the
 beginning of your path variable. Also set a CHECKERS variable.<P>To set an environment variable, you have two options: make the change
@@ -4859,7 +4867,7 @@ dialog box, move the cursor to the beginning of the string in the
 <CODE>%CHECKERS%</CODE> environment variable) followed by a
 semicolon (<TT>;</TT>).<P>Similarly, set the CHECKERS variable.</P><P>This is a permanent change that only needs to be done once ever.
 </P></LI></UL><P>Now, verify that the installation works. From the command line, run:</P><PRE CLASS="verbatim">  javac -version
-</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.3
+</PRE><P>The output should be:</P><PRE CLASS="verbatim">  javac 1.7.0-jsr308-1.6.4
 </PRE></LI></OL><!--TOC section Ant task-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="ant-task">23.2</A>&#XA0;&#XA0;Ant task</H2><!--SEC END --><P>If you use the <A HREF="http://ant.apache.org/">Ant</A> build tool to compile
 your software, then you can add an Ant task that runs a checker. We assume
@@ -4876,7 +4884,7 @@ Set the <TT>jsr308javac</TT> property:<PRE CLASS="verbatim">  &lt;property envir
 
   &lt;presetdef name="jsr308.javac"&gt;
     &lt;javac fork="yes" executable="${checkers}/binary/${cfJavac}" &gt;
-      &lt;!-- JSR308 related compiler arguments --&gt;
+      &lt;!-- JSR-308-related compiler arguments --&gt;
       &lt;compilerarg value="-version"/&gt;
       &lt;!-- optional, so .class files work with older JVMs: &lt;compilerarg line="-target 5"/&gt; --&gt;
       &lt;compilerarg value="-implicit:class"/&gt;
@@ -4918,9 +4926,9 @@ pluggable type-checking fails; see Section&#XA0;<A HREF="#checker-options">2.2.1
 doesn&#X2019;t re-compile <TT>.java</TT> files for which a <TT>.class</TT> file
 already exists.</P><P>The <TT>-processor ...</TT> compiler argument indicates which checker to
 run. You can supply additional arguments to the checker as well.</P></LI></OL><!--TOC section Maven plugin-->
-<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="maven-plugin">23.3</A>&#XA0;&#XA0;Maven plugin</H2><!--SEC END --><P>If you use the <A HREF="http://maven.apache.org/">Maven</A> project tool,
-then you can specify the distributed checkers as part of your build
-process.</P><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">First, you need to add the repositories in your <TT>pom.xml</TT> file:<PRE CLASS="verbatim">    &lt;repositories&gt;
+<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="maven-plugin">23.3</A>&#XA0;&#XA0;Maven plugin</H2><!--SEC END --><P>If you use the <A HREF="http://maven.apache.org/">Maven</A> tool,
+then you can specify pluggable type-checking as part of your build
+process.</P><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">Add the repositories to your <TT>pom.xml</TT> file:<PRE CLASS="verbatim">    &lt;repositories&gt;
         &lt;repository&gt;
             &lt;id&gt;checker-framework-repo&lt;/id&gt;
             &lt;url&gt;http://types.cs.washington.edu/m2-repo&lt;/url&gt;
@@ -4932,23 +4940,29 @@ process.</P><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">First, you nee
             &lt;url&gt;http://types.cs.washington.edu/m2-repo&lt;/url&gt;
         &lt;/pluginRepository&gt;
     &lt;/pluginRepositories&gt;
-</PRE></LI><LI CLASS="li-enumerate">Then, to use the annotations used by the distributed checkers, you&#X2019;ll
-have to declared as a dependency:<PRE CLASS="verbatim">    &lt;dependencies&gt;
-        &lt;!-- annotations for the standard checkers: nullness, interning, mutability --&gt;
+</PRE></LI><LI CLASS="li-enumerate">Declare a dependency on the type qualifier annotations. Find the
+existing <TT>&lt;dependencies&gt;</TT> section and add a new
+<TT>&lt;dependencies&gt;</TT> item:<PRE CLASS="verbatim">    &lt;dependencies&gt;
+        ... existing &lt;dependency&gt; items ...
+
+        &lt;!-- annotations for the standard checkers: nullness, interning, locking, ... --&gt;
         &lt;dependency&gt;
             &lt;groupId&gt;types.checkers&lt;/groupId&gt;
             &lt;artifactId&gt;checkers-quals&lt;/artifactId&gt;
-            &lt;version&gt;1.4.3&lt;/version&gt;
+            &lt;version&gt;1.6.3&lt;/version&gt;
         &lt;/dependency&gt;
 
-        &lt;!-- other dependencies --&gt;
     &lt;/dependencies&gt;
-</PRE></LI><LI CLASS="li-enumerate">And finally, you need to attach the plugin to your build lifecycle:<PRE CLASS="verbatim">    &lt;build&gt;
+</PRE></LI><LI CLASS="li-enumerate">Attach the plugin to your build lifecycle by adding a new
+<TT>&lt;plugin&gt;</TT> item within <TT>&lt;plugins&gt;</TT>, or a new <TT>&lt;plugins&gt;</TT>
+item if necessary.<PRE CLASS="verbatim">    &lt;build&gt;
         &lt;plugins&gt;
+            ... existing &lt;plugin&gt; items ...
+
             &lt;plugin&gt;
                 &lt;groupId&gt;types.checkers&lt;/groupId&gt;
                 &lt;artifactId&gt;checkers-maven-plugin&lt;/artifactId&gt;
-                &lt;version&gt;1.4.4&lt;/version&gt;
+                &lt;version&gt;1.6.3&lt;/version&gt;
                 &lt;executions&gt;
                     &lt;execution&gt;
                         &lt;!-- run the checkers after compilation; this can also be any later phase --&gt;
@@ -4965,32 +4979,50 @@ have to declared as a dependency:<PRE CLASS="verbatim">    &lt;dependencies&gt;
                         &lt;processor&gt;checkers.nullness.NullnessChecker&lt;/processor&gt;
                         &lt;processor&gt;checkers.interning.InterningChecker&lt;/processor&gt;
                     &lt;/processors&gt;
-
-
-                    &lt;!-- other optional configuration --&gt;
-                    &lt;!-- full path to a java executable that should be used to create the forked JVM --&gt;
-                    &lt;executable&gt;/opt/java1.6/bin/java&lt;/executable&gt;
-                    &lt;!-- should an error reported by a checker cause a build failure, or only be logged as a warning; defaults to true --&gt;
-                    &lt;failOnError&gt;true|false&lt;/failOnError&gt;
-                    &lt;!-- a list of patterns to include, in the standard maven syntax; defaults to **/*.java --&gt;
-                    &lt;includes&gt;
-                        &lt;include&gt;org/company/important/**/*.java&lt;/include&gt;
-                    &lt;/includes&gt;
-                    &lt;!-- a list of patterns to exclude, in the standard maven syntax; defaults to an empty list --&gt;
-                    &lt;excludes&gt;
-                        &lt;exclude&gt;org/company/notimportant/**/*.java&lt;/exclude&gt;
-                    &lt;/excludes&gt;
-                    &lt;!-- additional parameters passed to the JSR308 java compiler --&gt;
-                    &lt;javacParams&gt;-Alint&lt;/javacParams&gt;
-                    &lt;!-- additional parameters to pass to the forked JVM --&gt;
-                    &lt;javaParams&gt;-Xdebug&lt;/javaParams&gt;
-                    &lt;!-- versions of checkers to use; defaults to the current newest version: 1.4.5 --&gt;
-                    &lt;checkersVersion&gt;1.4.1&lt;/checkersVersion&gt;
                 &lt;/configuration&gt;
-            &lt;/plugin&gt;
+              &lt;/plugin&gt;
         &lt;/plugins&gt;
     &lt;/build&gt;
-</PRE></LI></OL><P>The plugin was contributed by Adam Warski.
+</PRE><P>The above example attaches the "check" goal to the "process-lifecycle" phase which occurs directly after
+the "compile" phase (see <A HREF="http://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html"><TT>http://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html</TT></A>).
+This means that any maven target that exercises that phase will also run the Checker Framework
+(e.g. mvn package, mvn verify).</P><P>To run only checking:
+<TT>mvn checkers:check</TT></P></LI><LI CLASS="li-enumerate">Add Optional Parameters<P>Within the configuration element you can add a number of parameters.</P><PRE CLASS="verbatim">    &lt;procOnly&gt;false&lt;/procOnly&gt;
+</PRE><P>By default, the Checker Framework Maven plugin will only check source files but will not produce
+class files for the source files it checks (see -proc:only at <A HREF="http://docs.oracle.com/javase/6/docs/technotes/tools/solaris/javac.html"><TT>http://docs.oracle.com/javase/6/docs/technotes/tools/solaris/javac.html</TT></A>).
+Setting <TT>procOnly</TT> to false will cause the Checker Framework compiler to generate class files.
+Note: If your Maven project&#X2019;s output directory has not been created then the plugin will attempt to
+create it and all required directories preceding it. The check task will fail
+in the event that these directories cannot be created.</P><P>You may want to check only a subset of source files in your project. To do so you can use the <TT>includes</TT> and <TT>excludes</TT>
+elements using the standard Maven syntax. The semantics of including/excluding files are also described
+by DirectoryScanner documentation found at:
+<A HREF="http://plexus.codehaus.org/plexus-utils/apidocs/org/codehaus/plexus/util/DirectoryScanner.html"><TT>http://plexus.codehaus.org/plexus-utils/apidocs/org/codehaus/plexus/util/DirectoryScanner.html</TT></A> (see setIncludes/setExcludes)</P><PRE CLASS="verbatim">    &lt;!-- a list of patterns to include, in the standard maven syntax; defaults to **/*.java --&gt;
+    &lt;includes&gt;
+        &lt;include&gt;org/company/important/**/*.java&lt;/include&gt;
+    &lt;/includes&gt;
+    &lt;!-- a list of patterns to exclude, in the standard maven syntax; defaults to an empty list --&gt;
+    &lt;excludes&gt;
+        &lt;exclude&gt;org/company/notimportant/**/*.java&lt;/exclude&gt;
+    &lt;/excludes&gt;
+</PRE><P>By default, an error reported by the Checker Framework Maven plugin will cause your build to fail. To prevent
+a build from failing and still produce error and warning output set <TT>failOError</TT> to false.</P><PRE CLASS="verbatim">    &lt;failOnError&gt;false&lt;/failOnError&gt;
+</PRE><P>You may want to run the Checker Framework using a Java version that differs from the version running Maven. The
+<TT>executable</TT> element specifies a Java executable to use when running the Checker Framework.</P><PRE CLASS="verbatim">    &lt;executable&gt;/usr/bin/java&lt;/executable&gt;
+</PRE><P>The version of the Checker Framework run by the Maven plugin will share the same version as the Maven plugin
+by default. That is, if you are using the Checker Framework Maven plugin version 1.6.3 then it will run the
+Checker Framework version 1.6.3 when checking source code. However, you can specify an earlier
+or later version of the Checker Framework using the <TT>checkersVersion</TT> element.
+Note: The Checker Framework Maven plugin will only work with Checker Framework versions 1.5.0 and higher.</P><PRE CLASS="verbatim">    &lt;checkersVersion&gt;1.6.2&lt;/checkersVersion&gt;
+</PRE><P>To disable the Checker Framework check without removing it from your pom file you can use the /codeskip option.
+</P><PRE CLASS="verbatim">    &lt;skip&gt;true&lt;/skip&gt;
+</PRE><P>Finally, the Checker Framework compiler is an extension of the javac compiler and therefore excepts any parameter
+that can be provided to javac or the JVM. To provide javac parameters you can use the <TT>javacParams</TT>
+element. To provide JVM arguments you can use the <TT>javaParams</TT> element.</P><PRE CLASS="verbatim">    &lt;!-- additional parameters passed to the JSR308 java compiler --&gt;
+    &lt;javacParams&gt;-Alint&lt;/javacParams&gt;
+    &lt;!-- additional parameters to pass to the forked JVM --&gt;
+    &lt;javaParams&gt;-Xdebug&lt;/javaParams&gt;
+</PRE></LI></OL><P>You can find an example Maven project that uses the Checker Framework Maven plugin at:
+<A HREF="http://types.cs.washington.edu/checker-framework/current/mvn-examples.zip"><TT>http://types.cs.washington.edu/checker-framework/current/mvn-examples.zip</TT></A></P><P>The plugin was contributed by Adam Warski.
 </P><!--TOC section Gradle-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="gradle">23.4</A>&#XA0;&#XA0;Gradle</H2><!--SEC END --><P>If you fork the compilation task, <A HREF="http://www.gradle.org/">Gradle</A>
 lets you specify the executable to compile java programs.</P><P>To specify the appropriate executable, set
@@ -5350,8 +5382,8 @@ expressiveness, the Lock Checker (see Chapter&#XA0;<A HREF="#lock-checker">5</A>
 <TT>@GuardedBy</TT> with two distinct meanings.</P><!--TOC section What is a &#X201C;receiver&#X201D;?-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="faq-receiver">24.18</A>&#XA0;&#XA0;What is a &#X201C;receiver&#X201D;?</H2><!--SEC END --><P>The <EM>receiver</EM> of a method is the <TT>this</TT> formal parameter, sometimes
 also called the &#X201C;current object&#X201D;. Within the method declaration, <TT>this</TT>
-is used to refer to the receiver. At a method call, the receiver is
-written before the method name.</P><P>The method <TT>compareTo</TT> takes <EM>two</EM> formal parameters. At a call site
+is used to refer to the receiver formal parameter. At a method call, the
+receiver actual argument is written before the method name.</P><P>The method <TT>compareTo</TT> takes <EM>two</EM> formal parameters. At a call site
 like <TT>x.compareTo(y)</TT>, the two arguments are <TT>x</TT> and <TT>y</TT>. It is
 desirable to be able to annotate the types of both of the formal
 parameters, and doing so is supported by both Java&#X2019;s type annotations
@@ -5371,7 +5403,12 @@ Object</TT> in the following declaration:</P><PRE CLASS="verbatim">  class MyCla
   myB.requiresA()    // OK
   myB.requiresB()    // OK
 </PRE><P>The invocation <TT>myA.requiresB()</TT> does not type-check because the actual
-argument&#X2019;s type is not a subtype of the formal parameter&#X2019;s type.</P><!--TOC section What is the meaning of an annotation after a type, such as <TT>@NonNull Object @Nullable</TT>?-->
+argument&#X2019;s type is not a subtype of the formal parameter&#X2019;s type.</P><P>A top-level constructor does not have a receiver. An inner class
+constructor does have a receiver, whose type is the same as the containing
+outer class. The receiver is distinct from the object being constructed.
+In a method of a top-level class, the receiver is named <TT>this</TT>. In a
+constructor of an inner class, the receiver is named <TT>Outer.this</TT> and the
+result is named <TT>this</TT>.</P><!--TOC section What is the meaning of an annotation after a type, such as <TT>@NonNull Object @Nullable</TT>?-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="faq-annotation-after-type">24.19</A>&#XA0;&#XA0;What is the meaning of an annotation after a type, such as <TT>@NonNull Object @Nullable</TT>?</H2><!--SEC END --><P>In a type such as <TT>@NonNull Object @Nullable []</TT>, it may appear that the
 <TT>@Nullable</TT> annotation is written <EM>after</EM> the type <TT>Object</TT>. In
 fact, <TT>@Nullable</TT> modifies <TT>[]</TT>. See the next FAQ, about array
@@ -5602,7 +5639,7 @@ features, new checker plugins, and other improvements.</P><P>Please ensure that 
 Otherwise, we may be unable to understand it or to reproduce it, either of
 which would prevent us from fixing the bug. Your bug report will be most
 helpful if you:</P><UL CLASS="itemize"><LI CLASS="li-itemize">
-Add <TT>-version -verbose -AprintErrorStack -printAllQualifiers</TT> to the javac options. This causes the compiler to output
+Add <TT>-version -verbose -AprintErrorStack -AprintAllQualifiers</TT> to the javac options. This causes the compiler to output
 debugging information, including its version number.
 </LI><LI CLASS="li-itemize">Indicate exactly what you did. Don&#X2019;t skip any steps, and don&#X2019;t merely
 describe your actions in words. Show the exact commands by attaching a
