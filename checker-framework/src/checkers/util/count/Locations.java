@@ -1,14 +1,27 @@
 package checkers.util.count;
 
-import checkers.source.*;
+import checkers.source.SourceChecker;
+import checkers.source.SourceVisitor;
+import checkers.source.SupportedOptions;
 
-import com.sun.source.tree.*;
-import com.sun.source.util.*;
-
-import java.util.*;
-
-import javax.annotation.processing.*;
+import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
+
+import com.sun.source.tree.AnnotationTree;
+import com.sun.source.tree.ArrayTypeTree;
+import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.InstanceOfTree;
+import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.NewArrayTree;
+import com.sun.source.tree.NewClassTree;
+import com.sun.source.tree.ParameterizedTypeTree;
+import com.sun.source.tree.Tree;
+import com.sun.source.tree.TypeCastTree;
+import com.sun.source.tree.TypeParameterTree;
+import com.sun.source.tree.VariableTree;
+import com.sun.source.tree.WildcardTree;
+import com.sun.source.util.TreePath;
 
 /**
  * An annotation processor for listing the potential locations of annotations.
@@ -34,7 +47,7 @@ import javax.lang.model.SourceVersion;
  *
  * <ul>
  *  <li>{@code -Aannotations}: prints, on the same line as each location,
- *  information about the annotation that is written there, if any</li> 
+ *  information about the annotation that is written there, if any</li>
  *  <li>{@code -Anolocations}: suppresses location output;
  *  only makes sense in conjunction with {@code -Aannotations}</li>
  * </ul>
@@ -49,8 +62,8 @@ import javax.lang.model.SourceVersion;
 public class Locations extends SourceChecker {
 
     @Override
-    protected SourceVisitor<?, ?> createSourceVisitor(CompilationUnitTree root) {
-        return new Visitor(this, root);
+    protected SourceVisitor<?, ?> createSourceVisitor() {
+        return new Visitor(this);
     }
 
     static class Visitor extends SourceVisitor<Void, Void> {
@@ -61,13 +74,11 @@ public class Locations extends SourceChecker {
         /** Whether annotation details should be printed. */
         private final boolean annotations;
 
-        public Visitor(Locations l, CompilationUnitTree root) {
-            super(l, root);
+        public Visitor(Locations l) {
+            super(l);
 
-            // Get annotation processor "-A" options.
-            Map<String, String> options = l.getProcessingEnvironment().getOptions();
-            locations = !options.containsKey("nolocations");
-            annotations = options.containsKey("annotations");
+            locations = !l.hasOption("nolocations");
+            annotations = l.hasOption("annotations");
         }
 
         @Override

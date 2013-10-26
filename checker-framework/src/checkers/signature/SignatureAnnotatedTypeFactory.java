@@ -1,8 +1,7 @@
 package checkers.signature;
 
-import com.sun.source.tree.CompilationUnitTree;
-
-import checkers.types.BasicAnnotatedTypeFactory;
+import checkers.basetype.BaseAnnotatedTypeFactory;
+import checkers.basetype.BaseTypeChecker;
 
 
 // TODO: Does not yet handle method signature annotations, such as
@@ -13,11 +12,10 @@ import checkers.types.BasicAnnotatedTypeFactory;
  * This class is currently not needed.
  * It is retained here to make future extension easier.
  */
-public class SignatureAnnotatedTypeFactory extends BasicAnnotatedTypeFactory<SignatureChecker> {
+public class SignatureAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
 
-    public SignatureAnnotatedTypeFactory(SignatureChecker checker,
-            CompilationUnitTree root) {
-        super(checker, root);
+    public SignatureAnnotatedTypeFactory(BaseTypeChecker checker) {
+        super(checker);
         this.postInit();
     }
 

@@ -1,3 +1,4 @@
+import checkers.nullness.quals.EnsuresNonNullIf;
 import checkers.nullness.quals.*;
 
 /**
@@ -6,7 +7,7 @@ import checkers.nullness.quals.*;
  */
 public class AssertIfTrueTest {
 
-    static String killfile_filter;
+    static String killfile_filter = "";
 
     public static void fromDir(File1 dbdir){
         if (!dbdir.isDirectory()) {
@@ -25,7 +26,8 @@ public class AssertIfTrueTest {
     // checking.
 
     public class File1 {
-        @AssertNonNullIfTrue({"list()","list(String)","listFiles()","listFiles(String)","listFiles(Double)"})
+        @SuppressWarnings("flowexpr.method.not.deterministic")
+        @EnsuresNonNullIf(result=true, expression={"list()","list(String)","listFiles()","listFiles(String)","listFiles(Double)"})
         public boolean isDirectory() { throw new RuntimeException("skeleton method"); }
 
         public String @Nullable [] list() { throw new RuntimeException("skeleton method"); }

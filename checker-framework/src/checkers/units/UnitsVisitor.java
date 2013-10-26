@@ -1,22 +1,23 @@
 package checkers.units;
 
-import com.sun.source.tree.CompilationUnitTree;
+import checkers.basetype.BaseTypeChecker;
+import checkers.basetype.BaseTypeVisitor;
+import checkers.quals.Unqualified;
+import checkers.source.Result;
+import checkers.types.AnnotatedTypeMirror;
+
 import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.Tree.Kind;
-
-import checkers.basetype.BaseTypeVisitor;
-import checkers.source.Result;
-import checkers.types.AnnotatedTypeMirror;
 
 /**
  * Units visitor.
  *
  * Ensure consistent use of compound assignments.
  */
-public class UnitsVisitor extends BaseTypeVisitor<UnitsChecker> {
-    public UnitsVisitor(UnitsChecker checker, CompilationUnitTree root) {
-        super(checker, root);
+public class UnitsVisitor extends BaseTypeVisitor<UnitsAnnotatedTypeFactory> {
+    public UnitsVisitor(BaseTypeChecker checker) {
+        super(checker);
     }
 
     @Override
@@ -28,13 +29,18 @@ public class UnitsVisitor extends BaseTypeVisitor<UnitsChecker> {
 
         Kind kind = node.getKind();
 
-        if ( (kind == Kind.PLUS_ASSIGNMENT || kind == Kind.MINUS_ASSIGNMENT) &&
-                !checker.getTypeHierarchy().isSubtype(exprType, varType)) {
-            checker.report(Result.failure("compoundassign.type.incompatible",
+        if ( (kind == Kind.PLUS_ASSIGNMENT || kind == Kind.MINUS_ASSIGNMENT)) {
+            if (!atypeFactory.getTypeHierarchy().isSubtype(exprType, varType)) {
+                checker.report(Result.failure("compound.assignment.type.incompatible",
+                        varType, exprType), node);
+            }
+        } else if (exprType.getAnnotation(Unqualified.class) == null) {
+            // Only allow mul/div with unqualified units
+            checker.report(Result.failure("compound.assignment.type.incompatible",
                     varType, exprType), node);
         }
 
-        return super.visitCompoundAssignment(node, p);
+        return null; // super.visitCompoundAssignment(node, p);
     }
 
 }

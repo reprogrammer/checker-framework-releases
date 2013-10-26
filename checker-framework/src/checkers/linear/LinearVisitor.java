@@ -1,14 +1,20 @@
 package checkers.linear;
 
-import javax.lang.model.element.Element;
-
-import com.sun.source.tree.*;
-
+import checkers.basetype.BaseTypeChecker;
 import checkers.basetype.BaseTypeVisitor;
+import checkers.linear.quals.Linear;
 import checkers.linear.quals.Unusable;
 import checkers.source.Result;
 import checkers.types.AnnotatedTypeMirror.AnnotatedExecutableType;
-import checkers.util.TreeUtils;
+
+import javacutils.TreeUtils;
+
+import javax.lang.model.element.Element;
+
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.MethodInvocationTree;
 
 /**
  * A type-checking visitor for the Linear type system.  The visitor reports
@@ -19,10 +25,10 @@ import checkers.util.TreeUtils;
  *
  * @see LinearChecker
  */
-public class LinearVisitor extends BaseTypeVisitor<LinearChecker> {
+public class LinearVisitor extends BaseTypeVisitor<LinearAnnotatedTypeFactory> {
 
-    public LinearVisitor(LinearChecker checker, CompilationUnitTree root) {
-        super(checker, root);
+    public LinearVisitor(BaseTypeChecker checker) {
+        super(checker);
     }
 
     /**

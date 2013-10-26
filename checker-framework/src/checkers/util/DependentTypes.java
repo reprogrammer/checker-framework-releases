@@ -1,26 +1,46 @@
 package checkers.util;
 
-import javax.lang.model.element.*;
-import javax.lang.model.util.Elements;
-
-import com.sun.source.tree.*;
-import com.sun.tools.javac.code.Attribute.TypeCompound;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.util.List;
-
+import checkers.basetype.BaseTypeChecker;
 import checkers.quals.Dependent;
-import checkers.source.SourceChecker;
 import checkers.types.AnnotatedTypeMirror;
 import checkers.types.AnnotatedTypeMirror.AnnotatedExecutableType;
 import checkers.types.GeneralAnnotatedTypeFactory;
 
+import javacutils.AnnotationUtils;
+import javacutils.InternalUtils;
+import javacutils.TreeUtils;
+
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
+import javax.lang.model.util.Elements;
+
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.NewClassTree;
+import com.sun.source.tree.Tree;
+import com.sun.tools.javac.code.Attribute.TypeCompound;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.util.List;
+
 public class DependentTypes {
     private final Elements elements;
+
+    // TODO: the implementation of this class needs some serious refactoring
+    // and thought (and documentation...).
+    // @Dependent expresses the relationship between two separate
+    // type systems. It is not enough to use the GeneralATF, which doesn'tee
+    // apply defaulting appropriate for the second type system.
+    // This issue is similar to the interaction between @Unused and
+    // the Nullness Checker.
     private final GeneralAnnotatedTypeFactory atypeFactory;
 
-    public DependentTypes(SourceChecker checker, CompilationUnitTree root) {
+    public DependentTypes(BaseTypeChecker checker, GeneralAnnotatedTypeFactory atypeFactory) {
         this.elements = checker.getProcessingEnvironment().getElementUtils();
-        this.atypeFactory = new GeneralAnnotatedTypeFactory(checker, root);
+        this.atypeFactory = atypeFactory;
     }
 
     private AnnotationMirror getResult(AnnotationMirror anno) {
@@ -65,17 +85,25 @@ public class DependentTypes {
         ExpressionTree expr = (ExpressionTree)tree;
         Element symbol = null;
         if (expr instanceof IdentifierTree)
-            symbol = TreeUtils.elementFromUse((IdentifierTree)expr);
+            symbol = TreeUtils.elementFromUse(expr);
         else if (expr instanceof MemberSelectTree)
-            symbol = TreeUtils.elementFromUse((MemberSelectTree)expr);
+            symbol = TreeUtils.elementFromUse(expr);
 
         if (symbol == null
                 || (!symbol.getKind().isField()
                     && symbol.getKind() != ElementKind.LOCAL_VARIABLE))
             return;
 
-        // FIXME: handle this case
-        AnnotatedTypeMirror receiver = atypeFactory.getReceiverType(expr);
+        AnnotatedTypeMirror receiver;
+        try {
+            // Ugly hack to not crash type checking if the GeneralATF
+            // runs into some problem determining the receiver type.
+            // TODO: remove GeneralATF, see note with field.
+            receiver = atypeFactory.getReceiverType(expr);
+        } catch (Throwable t) {
+            receiver = null;
+        }
+
         if (receiver != null)
             doSubsitution(symbol, type, receiver);
     }

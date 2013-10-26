@@ -1,3 +1,82 @@
+Version 1.7.0, 23 October 2013
+
+Format String Checker:
+  This new type-checker ensures that format methods, such as
+  System.out.printf, are invoked with correct arguments.
+
+Renamed the Basic Checker to the Subtyping Checker.
+
+Reimplemented the dataflow analysis that performs flow-sensitive type
+  refinement.  This fixes many bugs, improves precision, and adds features.
+  Many more Java expressions can be written as annotation arguments.
+
+Initialization Checker:
+  This new abstract type-checker verifies initialization properties.  It
+  needs to be combined with another type system whose proper initialization
+  should be checked.  This is the new default initialzation checker for the
+  Nullness Checker.  It is based on the "Freedom Before Commitment" approach.
+
+Renamed method annotations used by the Nullness Checker:
+  @AssertNonNullAfter => @EnsuresNonNull
+  @NonNullOnEntry => @RequiresNonNull
+  @AssertNonNullIfTrue(...) => @IfMethodReturnsFalseEnsuresNonNull
+  @AssertNonNullIfFalse(...) => @IfMethodReturnsFalseEnsuresNonNull
+  @LazyNonNull => @MonotonicNonNull
+  @AssertParametersNonNull => [no replacement]
+Removed annotations used by the Nullness Checker:
+  @AssertParametersNonNull
+Renamed type annotations used by the Initialization Checker:
+  @NonRaw => @Initialized
+  @Raw => @UnknownInitialization
+  new annotation @UnderInitialization
+The old Initialization Checker (that uses @Raw and @NonRaw) can be invoked
+  by invoking the NullnessRawnessChecker rather than the NullnessChecker.
+
+Purity (side effect) analysis uses new annotations @SideEffectFree,
+  @Deterministic, and @TerminatesExecution; @Pure means both @SideEffectFree
+  and @Deterministic.
+
+Pre- and postconditions about type qualifiers are available for any type system
+  through @RequiresQualifier, @EnsuresQualifier and @EnsuresQualifierIf.  The
+  contract annotations for the Nullness Checker (e.g. @EnsuresNonNull) are now
+  only a special case of these general purpose annotations.
+  The meta-annotations @PreconditionAnnotation, @PostconditionAnnotation, and
+  @ConditionalPostconditionAnnotation can be used to create more special-case
+  annotations for other type systems.
+
+Renamed assertion comment string used by all checkers:
+  @SuppressWarnings => @AssumeAssertion
+
+To use an assert statement to suppress warnings, the assertion message must
+  include the string "@AssumeAssertion(warningkey)".  Previously, just the
+  warning key sufficed, but the string @SuppressWarnings(warningkey) was
+  recommended.
+
+New command-line options:
+  -AonlyDefs and -AonlyUses complement existing -AskipDefs and -AskipUses
+  -AsuppressWarnings Suppress warnings matching the given key
+  -AassumeSideEffectFree Unsoundly assume that every method is side-effect-free
+  -AignoreRawTypeArguments Ignore subtype tests for type arguments that
+    were inferred for a raw type
+  -AenablePurity Check the bodies of methods marked as pure
+    (@SideEffectFree or @Deterministic)
+  -AsuggestPureMethods Suggest methods that could be marked as pure
+  -AassumeAssertionsAreEnabled, -AassumeAssertionsAreDisabled Whether to
+    assume that assertions are enabled or disabled
+  -AconcurrentSemantics Whether to assume concurrent semantics
+  -Anocheckjdk Don't err if no annotated JDK can be found
+  -Aflowdotdir Create an image of the control flow graph
+  -AinvariantArrays replaces -Alint=arrays:invariant 
+  -AcheckCastElementType replaces -Alint=cast:strict
+
+Manual:
+  New manual section about array types.
+  New FAQ entries:  "Which checker should I start with?", "How can I handle
+    typestate, or phases of my program with different data properties?",
+    "What is the meaning of a type qualifier at a class declaration?"
+  Reorganized FAQ chapter into sections.
+  Many other improvements.
+
 ----------------------------------------------------------------------
 
 Version 1.6.7, 28 August 2013
@@ -1528,7 +1607,7 @@ Checker Framework API
 
 Interned Checker
   Fixed some failing test cases
-  Fixed a bug related to auto-boxing/unboxing
+  Fixed a bug related to autoboxing/unboxing
   Added experimental flow-sensitive qualifier inference (use
     "-Alint=flow" to enable)
   Improved subtype testing, removing some spurious errors

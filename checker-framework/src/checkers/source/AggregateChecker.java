@@ -1,9 +1,12 @@
 package checkers.source;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -13,6 +16,7 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TreePath;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.ListBuffer;
 import com.sun.tools.javac.util.Log;
 
 /**
@@ -70,13 +74,24 @@ public abstract class AggregateChecker extends SourceChecker {
     @Override
     public void initChecker() {
         super.initChecker();
+        // first initialize all checkers
         for (SourceChecker checker : checkers) {
-            // Each checker should "support" all possible lint options - otherwise
-            // subchecker A would complain about an lint option for subchecker B.
-            checker.setSupportedLintOptions(this.getSupportedLintOptions());
             checker.initChecker();
         }
+        // then share options as necessary
+        for (SourceChecker checker : checkers) {
+            // We need to add all options that are activated for the aggregate to
+            // the individual checkers.
+            checker.addOptions(super.getOptions());
+            // Each checker should "support" all possible lint options - otherwise
+            // subchecker A would complain about a lint option for subchecker B.
+            checker.setSupportedLintOptions(this.getSupportedLintOptions());
+        }
+        allCheckersInited = true;
     }
+
+    // Whether all checkers were successfully initialized.
+    private boolean allCheckersInited = false;
 
     // Same functionality as the same field in SourceChecker
     int errsOnLastExit = 0;
@@ -91,6 +106,11 @@ public abstract class AggregateChecker extends SourceChecker {
             // of the component type checks, but come back
             // for the next compilation unit.
             this.errsOnLastExit = log.nerrors;
+            return;
+        }
+        if (!allCheckersInited) {
+            // If there was an initialization problem, an
+            // error was already output. Just quit.
             return;
         }
         for (SourceChecker checker : checkers) {
@@ -113,6 +133,16 @@ public abstract class AggregateChecker extends SourceChecker {
         for (SourceChecker checker : checkers) {
             options.addAll(checker.getSupportedOptions());
         }
+        options.addAll(expandCFOptions(Arrays.asList(this.getClass()), options.toArray(new String[0])));
+        return options;
+    }
+
+    @Override
+    public final Map<String, String> getOptions() {
+        Map<String, String> options = new HashMap<String, String>(super.getOptions());
+        for (SourceChecker checker : checkers) {
+            options.putAll(checker.getOptions());
+        }
         return options;
     }
 
@@ -126,8 +156,36 @@ public abstract class AggregateChecker extends SourceChecker {
     }
 
     @Override
-    protected SourceVisitor<?, ?> createSourceVisitor(CompilationUnitTree root) {
-        errorAbort("AggregateChecker.createSourceVisitor should never be called!");
+    protected SourceVisitor<?, ?> createSourceVisitor() {
+        return new AggregateVisitor(this);
+    }
+
+    // TODO some methods in a component checker should behave differently if they
+    // are part of an aggregate, e.g. getSuppressWarningKeys should additionally
+    // return the name of the aggregate checker.
+    // We could add a query method in SourceChecker that refers to the aggregate, if present.
+    // At the moment, all the component checkers manually need to add the name of the aggregate.
+}
+
+// TODO: change to independent compound visitor
+class AggregateVisitor extends SourceVisitor<Void, Void> {
+
+    protected List<SourceVisitor<?, ?>> visitors;
+
+    public AggregateVisitor(AggregateChecker checker) {
+        super(checker);
+        ListBuffer<SourceVisitor<?, ?>> visitorsLB = new ListBuffer<SourceVisitor<?, ?>>();
+        for (SourceChecker achecker : checker.checkers) {
+            visitorsLB.add(achecker.createSourceVisitor());
+        }
+        visitors = visitorsLB.toList();
+    }
+
+    @Override
+    public Void visit(CompilationUnitTree root, TreePath path, Void p) {
+        for (SourceVisitor<?, ?> avisitor : visitors) {
+            avisitor.visit(root, path, null);
+        }
         return null;
     }
 }

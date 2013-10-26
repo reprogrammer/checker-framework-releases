@@ -6,6 +6,19 @@ import static checkers.util.Heuristics.Matchers.preceededBy;
 import static checkers.util.Heuristics.Matchers.whenTrue;
 import static checkers.util.Heuristics.Matchers.withIn;
 
+import checkers.basetype.BaseTypeChecker;
+import checkers.nullness.quals.KeyFor;
+import checkers.types.AnnotatedTypeMirror;
+import checkers.types.AnnotatedTypeMirror.AnnotatedExecutableType;
+import checkers.types.GeneralAnnotatedTypeFactory;
+import checkers.util.Heuristics.Matcher;
+import checkers.util.Resolver2;
+
+import javacutils.AnnotationUtils;
+import javacutils.ElementUtils;
+import javacutils.InternalUtils;
+import javacutils.TreeUtils;
+
 import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -13,18 +26,6 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
-
-import checkers.nullness.quals.KeyFor;
-import checkers.types.AnnotatedTypeFactory;
-import checkers.types.AnnotatedTypeMirror;
-import checkers.types.AnnotatedTypeMirror.AnnotatedDeclaredType;
-import checkers.types.AnnotatedTypeMirror.AnnotatedExecutableType;
-import checkers.util.AnnotationUtils;
-import checkers.util.ElementUtils;
-import checkers.util.Heuristics.Matcher;
-import checkers.util.InternalUtils;
-import checkers.util.TreeUtils;
-import checkers.util.Resolver;
 
 import com.sun.source.tree.AssertTree;
 import com.sun.source.tree.BinaryTree;
@@ -67,7 +68,7 @@ import com.sun.source.util.TreePath;
  * <pre><code>assert map.get(key) != null;
  * Object v = map.get(key);</code></pre>
  *
- * <li value="4">Preceded by an check of contains or nullness if
+ * <li value="4">Preceded by a check of contains or nullness if
  * test that throws an exception, in the first line:
  *
  * <pre><code>if (!map.contains(key)) throw new Exception();
@@ -85,26 +86,30 @@ import com.sun.source.util.TreePath;
 
     private final ProcessingEnvironment processingEnv;
     private final NullnessAnnotatedTypeFactory atypeFactory;
-    private final AnnotatedTypeFactory keyForFactory;
-    private final Resolver resolver;
+    // private final KeyForAnnotatedTypeFactory keyForFactory;
+    private final GeneralAnnotatedTypeFactory keyForFactory;
+    private final Resolver2 resolver;
 
     private final ExecutableElement mapGet;
     private final ExecutableElement mapPut;
     private final ExecutableElement mapKeySet;
     private final ExecutableElement mapContains;
 
-    public MapGetHeuristics(ProcessingEnvironment env,
+    public MapGetHeuristics(BaseTypeChecker checker,
             NullnessAnnotatedTypeFactory factory,
-            AnnotatedTypeFactory keyForFactory) {
-        this.processingEnv = env;
+            GeneralAnnotatedTypeFactory keyForFactory) {
+        this.processingEnv = checker.getProcessingEnvironment();
         this.atypeFactory = factory;
         this.keyForFactory = keyForFactory;
-        this.resolver = new Resolver(env);
+        // TODO: why do we use a GeneralATF instead of a KeyForATF?
+        // If we use a local ATF, we need to make sure to set the root.
+        // this.keyForFactory = new KeyForAnnotatedTypeFactory(checker);
+        this.resolver = new Resolver2(processingEnv);
 
-        mapGet = TreeUtils.getMethod("java.util.Map", "get", 1, env);
-        mapPut = TreeUtils.getMethod("java.util.Map", "put", 2, env);
-        mapKeySet = TreeUtils.getMethod("java.util.Map", "keySet", 0, env);
-        mapContains = TreeUtils.getMethod("java.util.Map", "containsKey", 1, env);
+        mapGet = TreeUtils.getMethod("java.util.Map", "get", 1, processingEnv);
+        mapPut = TreeUtils.getMethod("java.util.Map", "put", 2, processingEnv);
+        mapKeySet = TreeUtils.getMethod("java.util.Map", "keySet", 0, processingEnv);
+        mapContains = TreeUtils.getMethod("java.util.Map", "containsKey", 1, processingEnv);
     }
 
     /**
@@ -113,14 +118,20 @@ import com.sun.source.util.TreePath;
      * @param path a path to a method invocation
      */
     public void handle(TreePath path, AnnotatedExecutableType method) {
-        MethodInvocationTree tree = (MethodInvocationTree)path.getLeaf();
-        if (TreeUtils.isMethodInvocation(tree, mapGet, processingEnv)) {
-            AnnotatedTypeMirror type = method.getReturnType();
-            if (mapGetReturnsNonNull(path)) {
-                type.replaceAnnotation(atypeFactory.NONNULL);
-            } else {
-                type.replaceAnnotation(atypeFactory.NULLABLE);
+        try {
+            MethodInvocationTree tree = (MethodInvocationTree) path.getLeaf();
+            if (TreeUtils.isMethodInvocation(tree, mapGet, processingEnv)) {
+                AnnotatedTypeMirror type = method.getReturnType();
+                if (mapGetReturnsNonNull(path)) {
+                    type.replaceAnnotation(atypeFactory.NONNULL);
+                } else {
+                    type.replaceAnnotation(atypeFactory.NULLABLE);
+                }
             }
+        } catch (Throwable t) {
+            // TODO: this is an ugly hack to suppress some problems in Resolver2
+            // that cause an exception. See tests/nullness/KeyFors.java for an
+            // example that might be affected.
         }
     }
 
@@ -321,9 +332,15 @@ import com.sun.source.util.TreePath;
 
     /** Given a method invocation tree, return the Element for its receiver. */
     private Element getReceiver(MethodInvocationTree tree) {
-        AnnotatedDeclaredType type =
-            (AnnotatedDeclaredType)atypeFactory.getReceiverType(tree);
-        return type.getElement();
+        Element element = InternalUtils.symbol(tree);
+        assert element != null : "Unexpected null element for tree: " + tree;
+        // Return null if the element kind has no receiver.
+        if (!ElementUtils.hasReceiver(element)) {
+            return null;
+        }
+        ExpressionTree receiver = TreeUtils.getReceiverTree(tree);
+        Element rcvelem = InternalUtils.symbol(receiver);
+        return rcvelem;
     }
 
     private boolean isInvocationOf(ExecutableElement method, Element key, VariableElement map, ExpressionTree tree) {

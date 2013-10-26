@@ -1,28 +1,29 @@
 package checkers.oigj;
 
-import java.util.Collections;
-
-import javax.lang.model.element.Element;
-
-import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.Tree;
-
+import checkers.basetype.BaseTypeChecker;
 import checkers.basetype.BaseTypeVisitor;
 import checkers.oigj.quals.Assignable;
 import checkers.types.AnnotatedTypeMirror;
 import checkers.types.AnnotatedTypeMirror.AnnotatedDeclaredType;
-import checkers.util.InternalUtils;
-import checkers.util.TreeUtils;
 
-public class ImmutabilityVisitor extends BaseTypeVisitor<ImmutabilitySubchecker> {
+import javacutils.InternalUtils;
+import javacutils.TreeUtils;
 
-    public ImmutabilityVisitor(ImmutabilitySubchecker checker, CompilationUnitTree root) {
-        super(checker, root);
+import java.util.Collections;
+
+import javax.lang.model.element.Element;
+
+import com.sun.source.tree.Tree;
+
+public class ImmutabilityVisitor extends BaseTypeVisitor<ImmutabilityAnnotatedTypeFactory> {
+
+    public ImmutabilityVisitor(BaseTypeChecker checker) {
+        super(checker);
     }
 
     @Override
     public boolean isValidUse(AnnotatedDeclaredType declarationType,
-                             AnnotatedDeclaredType useType) {
+                             AnnotatedDeclaredType useType, Tree tree) {
         return true;
     }
 
@@ -53,9 +54,9 @@ public class ImmutabilityVisitor extends BaseTypeVisitor<ImmutabilitySubchecker>
             return true;
         }
 
-        if (checker.getQualifierHierarchy().isSubtype(
+        if (atypeFactory.getQualifierHierarchy().isSubtype(
                 receiverType.getAnnotations(),
-                Collections.singleton(checker.ASSIGNS_FIELDS)))
+                Collections.singleton(atypeFactory.ASSIGNS_FIELDS)))
             return true;
 
         return false;

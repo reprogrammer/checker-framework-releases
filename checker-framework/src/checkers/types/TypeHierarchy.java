@@ -1,5 +1,18 @@
 package checkers.types;
 
+import checkers.basetype.BaseTypeChecker;
+import checkers.types.AnnotatedTypeMirror.AnnotatedArrayType;
+import checkers.types.AnnotatedTypeMirror.AnnotatedDeclaredType;
+import checkers.types.AnnotatedTypeMirror.AnnotatedTypeVariable;
+import checkers.types.AnnotatedTypeMirror.AnnotatedUnionType;
+import checkers.types.AnnotatedTypeMirror.AnnotatedWildcardType;
+import checkers.util.AnnotatedTypes;
+import checkers.util.QualifierPolymorphism;
+
+import javacutils.AnnotationUtils;
+import javacutils.ErrorReporter;
+import javacutils.InternalUtils;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -7,16 +20,6 @@ import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeVariable;
-
-import checkers.basetype.BaseTypeChecker;
-import checkers.types.AnnotatedTypeMirror.AnnotatedArrayType;
-import checkers.types.AnnotatedTypeMirror.AnnotatedDeclaredType;
-import checkers.types.AnnotatedTypeMirror.AnnotatedTypeVariable;
-import checkers.types.AnnotatedTypeMirror.AnnotatedWildcardType;
-import checkers.util.AnnotatedTypes;
-import checkers.util.AnnotationUtils;
-import checkers.util.InternalUtils;
-import checkers.util.QualifierPolymorphism;
 
 /**
  * Class to test {@link AnnotatedTypeMirror} subtype relationships.
@@ -77,12 +80,19 @@ public class TypeHierarchy {
      * @return  a true iff rhs a subtype of lhs
      */
     public boolean isSubtype(AnnotatedTypeMirror rhs, AnnotatedTypeMirror lhs) {
-        rhs = handlePolyAll(rhs);
-        lhs = handlePolyAll(lhs);
+        try {
+            rhs = handlePolyAll(rhs);
+            lhs = handlePolyAll(lhs);
 
-        boolean result = isSubtypeImpl(rhs, lhs);
-        this.visited.clear();
-        return result;
+            boolean result = isSubtypeImpl(rhs, lhs);
+            this.visited.clear();
+            return result;
+        } catch (Throwable t) {
+            ErrorReporter.errorAbort("Found exception during TypeHierarchy.isSubtype of " +
+                    rhs + " and " + lhs, t);
+            // Dead code
+            return false;
+        }
     }
 
     /**
@@ -142,9 +152,10 @@ public class TypeHierarchy {
         if (visited.contains(lhs))
             return true;
 
-        // An intersection type on the RHS is a subtype,
-        // iff any of its bounds is. 
-        if (rhs.getKind() == TypeKind.INTERSECTION) {
+        switch (rhs.getKind()) {
+        case INTERSECTION: {
+            // An intersection type on the RHS is a subtype,
+            // iff any of its bounds is.
             for (AnnotatedTypeMirror atm : rhs.directSuperTypes()) {
                 if (isSubtypeImpl(atm, lhs)) {
                     return true;
@@ -152,15 +163,43 @@ public class TypeHierarchy {
             }
             return false;
         }
-        // An intersection type on the LHS is a supertype,
-        // iff all of its bounds are.
-        if (lhs.getKind() == TypeKind.INTERSECTION) {
+        case UNION: {
+            // A union type on the RHS is a subtype,
+            // iff all of its bounds are.
+            for (AnnotatedTypeMirror atm : ((AnnotatedUnionType)rhs).getAlternatives()) {
+                if (!isSubtypeImpl(atm, lhs)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        default:
+            // Nothing special.
+        }
+
+        switch (lhs.getKind()) {
+        case INTERSECTION: {
+            // An intersection type on the LHS is a supertype,
+            // iff all of its bounds are.
             for (AnnotatedTypeMirror atm : lhs.directSuperTypes()) {
                 if (!isSubtypeImpl(rhs, atm)) {
                     return false;
                 }
             }
             return true;
+        }
+        case UNION: {
+            // A union type on the LHS is a supertype,
+            // iff any of its bounds are.
+            for (AnnotatedTypeMirror atm : ((AnnotatedUnionType)rhs).getAlternatives()) {
+                if (isSubtypeImpl(atm, lhs)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        default:
+            // Nothing special.
         }
 
         AnnotatedTypeMirror lhsBase = lhs;
@@ -172,11 +211,17 @@ public class TypeHierarchy {
                         && isSubtypeImpl(rhs, wildcard.getEffectiveSuperBound())) {
                     return true;
                 }
-                if (wildcard.isAnnotated()
-                        && qualifierHierarchy.isSubtype(rhs.getEffectiveAnnotations(), wildcard.getAnnotations())) {
+                if (!wildcard.getAnnotations().isEmpty()
+                        && qualifierHierarchy.isSubtype(lhs, rhs, rhs.getEffectiveAnnotations(), wildcard.getAnnotations())) {
                     return true;
                 } else {
                     Set<AnnotationMirror> bnd = wildcard.getEffectiveAnnotations();
+                    if (bnd.isEmpty()) {
+                        // The bound of a wildcard should only be empty if the type variable
+                        // bounds had circular dependencies and "unrolling" stopped.
+                        // Is there a nicer solution?
+                        return true;
+                    }
                     Set<AnnotationMirror> bot = AnnotationUtils.createAnnotationSet();
                     for (AnnotationMirror bndi : bnd) {
                         bot.add(qualifierHierarchy.getBottomAnnotation(bndi));
@@ -188,8 +233,8 @@ public class TypeHierarchy {
                     }
                     if (!wildcard.isMethodTypeArgHack() &&
                             (!bnd.isEmpty() && bnd.size() == bot.size()) &&
-                            (!qualifierHierarchy.isSubtype(bnd, bot) ||
-                            !qualifierHierarchy.isSubtype(rhs.getEffectiveAnnotations(), bot))) {
+                            (!qualifierHierarchy.isSubtype(lhs, rhs, bnd, bot) ||
+                            !qualifierHierarchy.isSubtype(lhs, rhs, rhs.getEffectiveAnnotations(), bot))) {
                         return false;
                     }
                 }
@@ -200,7 +245,7 @@ public class TypeHierarchy {
             } else if (lhsBase.getKind() == TypeKind.TYPEVAR && rhs.getKind() != TypeKind.TYPEVAR) {
                 AnnotatedTypeVariable lhsb_atv = (AnnotatedTypeVariable)lhsBase;
                 Set<AnnotationMirror> lAnnos = lhsb_atv.getEffectiveLowerBound().getAnnotations();
-                return qualifierHierarchy.isSubtype(rhs.getAnnotations(), lAnnos);
+                return qualifierHierarchy.isSubtype(lhs, rhs, rhs.getAnnotations(), lAnnos);
             }
         }
 
@@ -219,17 +264,18 @@ public class TypeHierarchy {
         // System.out.printf("lhsBase=%s (%s), rhsBase=%s (%s)%n",
         //        lhsBase, lhsBase.getClass(), rhsBase, rhsBase.getClass());
 
-        {
+        if (!QualifierHierarchy.canHaveEmptyAnnotationSet(lhsBase)) {
             Set<AnnotationMirror> lhsAnnos = lhsBase.getEffectiveAnnotations();
             Set<AnnotationMirror> rhsAnnos = rhsBase.getEffectiveAnnotations();
 
-            if (lhsAnnos.isEmpty() || rhsAnnos.isEmpty() && lhsBase.getKind()==TypeKind.TYPEVAR) {
-                // TODO: allow type variables without annotations for now. Better solution?
-                // System.out.println("TypeHierarchy: empty annotations in lhs: " +
-                //        lhs + " " + lhsAnnos + " or rhs: " + rhs + " " + rhsAnnos);
-                return true;
-            }
-
+            assert lhsAnnos.size() == qualifierHierarchy.getWidth() :
+                "Found invalid number of annotations on lhsBase " + lhsBase +
+                "; comparing lhs: " + lhs + " rhs: " + rhs +
+                "; expected number: " + qualifierHierarchy.getWidth();
+            assert rhsAnnos.size() == qualifierHierarchy.getWidth() :
+                "Found invalid number of annotations on rhsBase " + rhsBase +
+                "; comparing lhs: " + lhs + " rhs: " + rhs +
+                "; expected number: " + qualifierHierarchy.getWidth();
             if (!qualifierHierarchy.isSubtype(rhsAnnos, lhsAnnos)) {
                 return false;
             }
@@ -245,41 +291,50 @@ public class TypeHierarchy {
             // System.out.printf("lhsBase (%s underlying=%s), rhsBase (%s underlying=%s), equals=%s%n", lhsBase.hashCode(), lhsBase.getUnderlyingType(), rhsBase.hashCode(), rhsBase.getUnderlyingType(), lhsBase.equals(rhsBase));
 
             if (areCorrespondingTypeVariables(lhsBase, rhsBase)) {
-                // We have corresponding type variables
-                if(!lhsBase.getAnnotations().isEmpty() && !rhsBase.getAnnotations().isEmpty() &&
-                    qualifierHierarchy.isSubtype(rhsBase.getAnnotations(), lhsBase.getAnnotations())) {
-                    // Both sides have annotations and the rhs is a subtype of the lhs -> good
-                    return true;
-                }
-                if(!rhsBase.getAnnotations().isEmpty() &&
-                        lhsBase.getAnnotations().isEmpty()) {
-                    for (AnnotationMirror bot : qualifierHierarchy.getBottomAnnotations()) {
-                        for(AnnotationMirror rhsAnno : rhsBase.getAnnotations()) {
-                            if (!AnnotationUtils.areSame(bot, rhsAnno)) {
-                                return false;
-                            }
+                Set<? extends AnnotationMirror> tops = qualifierHierarchy.getTopAnnotations();
+                int good = 0;
+                // Go through annotations for each hierarchy separately.
+                for (AnnotationMirror top : tops) {
+                    AnnotationMirror curRhsAnno = qualifierHierarchy
+                            .getAnnotationInHierarchy(rhsBase.getAnnotations(), top);
+                    AnnotationMirror curLhsAnno = qualifierHierarchy
+                            .getAnnotationInHierarchy(lhsBase.getAnnotations(), top);
+                    // We have corresponding type variables
+                    if(curLhsAnno != null && curRhsAnno != null &&
+                        qualifierHierarchy.isSubtype(curRhsAnno, curLhsAnno)) {
+                        // Both sides have annotations and the rhs is a subtype of the lhs -> good
+                        good++; continue;
+                    }
+                    if(curRhsAnno != null &&
+                            curLhsAnno == null) {
+                        AnnotationMirror bot = qualifierHierarchy.getBottomAnnotation(top);
+                        if (!AnnotationUtils.areSame(bot, curRhsAnno)) {
+                            return false;
+                        }
+                        // Only the rhs is annotated and it's only bottom annotations -> good
+                        good++; continue;
+                    }
+                    if(curLhsAnno != null &&
+                            curRhsAnno == null) {
+                        if (qualifierHierarchy.isSubtype(((AnnotatedTypeVariable)rhsBase).getEffectiveUpperBound().getAnnotationInHierarchy(top),
+                                curLhsAnno)) {
+                            // The annotations on the upper bound of the RHS are below the annotation on the LHS -> good
+                            good++; continue;
+                        } else {
+                            // LHS has annotation that is not a top annotation -> bad
+                            return false;
                         }
                     }
-                    // Only the rhs is annotated and it's only bottom annotations -> good
-                    return true;
-                }
-                if(!lhsBase.getAnnotations().isEmpty() &&
-                        rhsBase.getAnnotations().isEmpty()) {
-                    if (qualifierHierarchy.isSubtype(((AnnotatedTypeVariable)rhsBase).getEffectiveUpperBound().getAnnotations(),
-                            lhsBase.getAnnotations())) {
-                        // The annotations on the upper bound of the RHS are below the annotation on the LHS -> good
-                        return true;
+                    if (curRhsAnno == null && curLhsAnno == null) {
+                        // Neither type variable has an annotation and they correspond -> good
+                        good++; continue;
                     } else {
-                        // LHS has annotation that is not a top annotation -> bad
+                        // Go away.
                         return false;
                     }
                 }
-                if (lhsBase.getAnnotations().isEmpty() && rhsBase.getAnnotations().isEmpty()) {
-                    // Neither type variable has an annotation and they correspond -> good
+                if (good == tops.size()) {
                     return true;
-                } else {
-                    // Go away.
-                    return false;
                 }
             }
 
@@ -348,6 +403,11 @@ public class TypeHierarchy {
         return false;
     }
 
+    protected boolean ignoreRawTypeArguments(AnnotatedDeclaredType rhs, AnnotatedDeclaredType lhs) {
+        return checker.hasOption("ignoreRawTypeArguments") &&
+                (rhs.wasRaw() || lhs.wasRaw());
+    }
+
     /**
      * Checks that rhs and lhs are subtypes with respect to type arguments only.
      * Returns true if any of the provided types is not a parameterized type.
@@ -365,6 +425,10 @@ public class TypeHierarchy {
      * @return  true iff the type arguments of lhs and rhs are invariant.
      */
     protected boolean isSubtypeTypeArguments(AnnotatedDeclaredType rhs, AnnotatedDeclaredType lhs) {
+        if (ignoreRawTypeArguments(rhs, lhs)) {
+            return true;
+        }
+
         List<AnnotatedTypeMirror> rhsTypeArgs = rhs.getTypeArguments();
         List<AnnotatedTypeMirror> lhsTypeArgs = lhs.getTypeArguments();
 
@@ -411,10 +475,11 @@ public class TypeHierarchy {
             visited.add(lhs);
 
             if(!lhs.getAnnotations().isEmpty()) {
-                if (!lhs.getAnnotations().equals(rhs.getEffectiveAnnotations())) {
+                if (!lhs.getEffectiveAnnotations().equals(rhs.getEffectiveAnnotations())) {
                     return false;
                 }
             }
+
             lhs = ((AnnotatedWildcardType)lhs).getEffectiveExtendsBound();
             if (lhs == null)
                 return true;
@@ -430,6 +495,14 @@ public class TypeHierarchy {
             if (visited.contains(rhs))
                 return true;
             visited.add(rhs);
+
+            if (((AnnotatedWildcardType)lhs).getExtendsBoundField() == null ||
+                    ((AnnotatedWildcardType)lhs).getExtendsBoundField().getAnnotations().isEmpty()) {
+                // TODO: the LHS extends bound hasn't been unfolded or defaulted.
+                // Stop looking, we should be fine.
+                // See tests/nullness/generics/WildcardSubtyping.java
+                return true;
+            }
 
             AnnotatedTypeMirror rhsbnd = ((AnnotatedWildcardType)rhs).getEffectiveExtendsBound();
             AnnotatedTypeMirror lhsbnd = ((AnnotatedWildcardType)lhs).getEffectiveExtendsBound();
@@ -519,7 +592,7 @@ public class TypeHierarchy {
         // End of copied code.
 
         // The main array component annotations must be equal.
-        if (checker.getLintOption("arrays:invariant", false) &&
+        if (checker.hasOption("invariantArrays") &&
                 !AnnotationUtils.areSame(lhs.getAnnotations(), rhs.getAnnotations())) {
             return false;
         }

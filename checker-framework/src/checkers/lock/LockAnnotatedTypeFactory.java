@@ -1,21 +1,30 @@
 package checkers.lock;
 
+import checkers.basetype.BaseAnnotatedTypeFactory;
+import checkers.basetype.BaseTypeChecker;
+import checkers.lock.quals.GuardedBy;
+import checkers.lock.quals.GuardedByTop;
+import checkers.quals.Unqualified;
+import checkers.types.AnnotatedTypeMirror;
+import checkers.types.QualifierHierarchy;
+import checkers.util.AnnotationBuilder;
+import checkers.util.GraphQualifierHierarchy;
+import checkers.util.MultiGraphQualifierHierarchy;
+
+import javacutils.AnnotationUtils;
+import javacutils.TreeUtils;
+import javacutils.TypesUtils;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import javax.lang.model.element.AnnotationMirror;
 
-import checkers.lock.quals.GuardedBy;
-import checkers.quals.Unqualified;
-import checkers.types.AnnotatedTypeMirror;
-import checkers.types.BasicAnnotatedTypeFactory;
-import checkers.util.AnnotationBuilder;
-import checkers.util.AnnotationUtils;
-import checkers.util.TreeUtils;
-import checkers.util.TypesUtils;
-
-import com.sun.source.tree.*;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.Tree;
 
 // Disclaimer:
 // This class is currently in its alpha form.  For sample code on how to write
@@ -28,16 +37,16 @@ import com.sun.source.tree.*;
  * qualifiers only for the locks that are not currently held.
  *
  */
-public class LockAnnotatedTypeFactory
-    extends BasicAnnotatedTypeFactory<LockChecker> {
+public class LockAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
 
     private List<String> heldLocks = new ArrayList<String>();
-    private final AnnotationMirror GUARDED_BY;
+    protected final AnnotationMirror GUARDED_BY, GUARDEDBY_TOP, UNQUALIFIED;
 
-    public LockAnnotatedTypeFactory(LockChecker checker,
-            CompilationUnitTree root) {
-        super(checker, root);
+    public LockAnnotatedTypeFactory(BaseTypeChecker checker) {
+        super(checker);
         GUARDED_BY = AnnotationUtils.fromClass(elements, GuardedBy.class);
+        GUARDEDBY_TOP = AnnotationUtils.fromClass(elements, GuardedByTop.class);
+        UNQUALIFIED = AnnotationUtils.fromClass(elements, Unqualified.class);
 
         addAliasedAnnotation(net.jcip.annotations.GuardedBy.class, GUARDED_BY);
 
@@ -60,14 +69,13 @@ public class LockAnnotatedTypeFactory
 
         String lock = AnnotationUtils.getElementValue(guarded, "value", String.class, false);
         if (heldLocks.contains(lock)) {
-            type.clearAnnotations();
-            type.addAnnotation(Unqualified.class);
+            type.replaceAnnotation(UNQUALIFIED);
         }
     }
 
     private AnnotationMirror createGuarded(String lock) {
         AnnotationBuilder builder =
-            new AnnotationBuilder(processingEnv, GuardedBy.class.getCanonicalName());
+            new AnnotationBuilder(processingEnv, GuardedBy.class);
         builder.setValue("value", lock);
         return builder.build();
     }
@@ -99,8 +107,7 @@ public class LockAnnotatedTypeFactory
         assert receiver != null;
         if (receiver != null) {
             AnnotationMirror newAnno = createGuarded(receiver.toString());
-            type.clearAnnotations();
-            type.addAnnotation(newAnno);
+            type.replaceAnnotation(newAnno);
         }
     }
 
@@ -119,8 +126,7 @@ public class LockAnnotatedTypeFactory
             return;
 
         AnnotationMirror newAnno = createGuarded(expr.toString());
-        type.clearAnnotations();
-        type.addAnnotation(newAnno);
+        type.replaceAnnotation(newAnno);
     }
 
     // TODO: Aliasing is not handled nicely by getAnnotation.
@@ -132,7 +138,7 @@ public class LockAnnotatedTypeFactory
     }
 
     @Override
-    public void annotateImplicit(Tree tree, AnnotatedTypeMirror type) {
+    protected void annotateImplicit(Tree tree, AnnotatedTypeMirror type, boolean useFlow) {
         if (!hasGuardedBy(type)) {
             /* TODO: I added STRING_LITERAL to the list of types that should get defaulted.
              * This resulted in Flow inference to infer Unqualified for strings, which is a
@@ -140,7 +146,7 @@ public class LockAnnotatedTypeFactory
              * This check ensures that an existing annotation doesn't get removed by flow.
              * However, I'm not sure this is the nicest way to do things.
              */
-            super.annotateImplicit(tree, type);
+            super.annotateImplicit(tree, type, useFlow);
         }
         replaceThis(type, tree);
         replaceItself(type, tree);
@@ -158,4 +164,41 @@ public class LockAnnotatedTypeFactory
             return super.aliasedAnnotation(a);
         }
     }
+
+    @Override
+    public QualifierHierarchy createQualifierHierarchy(MultiGraphQualifierHierarchy.MultiGraphFactory ignorefactory) {
+        MultiGraphQualifierHierarchy.MultiGraphFactory factory = createQualifierHierarchyFactory();
+
+        factory.addQualifier(GUARDEDBY_TOP);
+        factory.addQualifier(GUARDED_BY);
+        factory.addQualifier(UNQUALIFIED);
+        factory.addSubtype(UNQUALIFIED, GUARDED_BY);
+        factory.addSubtype(GUARDED_BY, GUARDEDBY_TOP);
+
+        return new LockQualifierHierarchy(factory);
+    }
+
+    private final class LockQualifierHierarchy extends GraphQualifierHierarchy {
+
+        public LockQualifierHierarchy(MultiGraphQualifierHierarchy.MultiGraphFactory factory) {
+            super(factory, UNQUALIFIED);
+        }
+
+        @Override
+        public boolean isSubtype(AnnotationMirror rhs, AnnotationMirror lhs) {
+            if (AnnotationUtils.areSameIgnoringValues(rhs, UNQUALIFIED)
+                    && AnnotationUtils.areSameIgnoringValues(lhs, GUARDED_BY)) {
+                return true;
+            }
+            // Ignore annotation values to ensure that annotation is in supertype map.
+            if (AnnotationUtils.areSameIgnoringValues(lhs, GUARDED_BY)) {
+                lhs = GUARDED_BY;
+            }
+            if (AnnotationUtils.areSameIgnoringValues(rhs, GUARDED_BY)) {
+                rhs = GUARDED_BY;
+            }
+            return super.isSubtype(rhs, lhs);
+        }
+    }
+
 }

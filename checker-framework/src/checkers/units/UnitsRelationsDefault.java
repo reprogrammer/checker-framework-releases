@@ -4,6 +4,8 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.util.Elements;
 
+import javacutils.AnnotationUtils;
+
 import checkers.types.AnnotatedTypeMirror;
 import checkers.units.quals.Prefix;
 import checkers.units.quals.h;
@@ -12,9 +14,9 @@ import checkers.units.quals.kmPERh;
 import checkers.units.quals.m;
 import checkers.units.quals.m2;
 import checkers.units.quals.mPERs;
+import checkers.units.quals.mPERs2;
 import checkers.units.quals.s;
 import checkers.util.AnnotationBuilder;
-import checkers.util.AnnotationUtils;
 
 /**
  * Default relations between SI units.
@@ -22,7 +24,7 @@ import checkers.util.AnnotationUtils;
  */
 public class UnitsRelationsDefault implements UnitsRelations {
 
-    protected AnnotationMirror m, km, m2, km2, s, h, mPERs, kmPERh;
+    protected AnnotationMirror m, km, m2, km2, s, h, mPERs, mPERs2, kmPERh;
 
     @Override
     public UnitsRelations init(ProcessingEnvironment env) {
@@ -46,6 +48,8 @@ public class UnitsRelationsDefault implements UnitsRelations {
 
         mPERs = AnnotationUtils.fromClass(elements, mPERs.class);
         kmPERh = AnnotationUtils.fromClass(elements, kmPERh.class);
+
+        mPERs2 = AnnotationUtils.fromClass(elements, mPERs2.class);
 
         return this;
     }

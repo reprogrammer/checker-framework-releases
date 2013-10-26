@@ -1,28 +1,41 @@
 package checkers.util.debug;
 
-import java.io.PrintStream;
-import java.lang.reflect.Constructor;
-import java.util.List;
-
-import javax.annotation.processing.*;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.*;
-import javax.lang.model.util.AbstractElementVisitor6;
-
-import checkers.source.AbstractTypeProcessor;
 import checkers.source.SourceChecker;
 import checkers.source.SourceVisitor;
 import checkers.types.AnnotatedTypeFactory;
 import checkers.types.AnnotatedTypeMirror;
-import checkers.types.AnnotatedTypeMirror.*;
+import checkers.types.AnnotatedTypeMirror.AnnotatedDeclaredType;
+import checkers.types.AnnotatedTypeMirror.AnnotatedExecutableType;
+import checkers.types.AnnotatedTypeMirror.AnnotatedTypeVariable;
 
-import com.sun.source.tree.CompilationUnitTree;
+import javacutils.AbstractTypeProcessor;
+
+import java.io.PrintStream;
+import java.lang.reflect.Constructor;
+import java.util.List;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
+import javax.annotation.processing.SupportedSourceVersion;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.util.AbstractElementVisitor6;
+
 import com.sun.source.util.TreePath;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.util.Context;
 
 /**
  * Outputs the method signatures of a class with fully annotated types.
+ * <p>
  *
  * The class determines the effective annotations for a checker in source or
  * the classfile.  Finding the effective annotations is useful for the
@@ -67,7 +80,7 @@ public class SignaturePrinter extends AbstractTypeProcessor {
             try {
                 Class<?> checkerClass = Class.forName(checkerName);
                 Constructor<?> cons = checkerClass.getConstructor();
-                checker = (SourceChecker)cons.newInstance();
+                checker = (SourceChecker) cons.newInstance();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -75,8 +88,7 @@ public class SignaturePrinter extends AbstractTypeProcessor {
             checker = new SourceChecker() {
 
                 @Override
-                protected SourceVisitor<?, ?> createSourceVisitor(
-                        CompilationUnitTree root) {
+                protected SourceVisitor<?, ?> createSourceVisitor() {
                     return null;
                 }
 
@@ -94,10 +106,11 @@ public class SignaturePrinter extends AbstractTypeProcessor {
 
     @Override
     public void typeProcess(TypeElement element, TreePath p) {
-        checker.currentPath = p;
-        CompilationUnitTree root = p != null ? p.getCompilationUnit() : null;
-        ElementPrinter printer = new ElementPrinter(checker.createFactory(root), System.out);
-        printer.visit(element);
+        // TODO: fix this mess
+        // checker.currentPath = p;
+        // CompilationUnitTree root = p != null ? p.getCompilationUnit() : null;
+        // ElementPrinter printer = new ElementPrinter(checker.createTypeFactory(), System.out);
+        // printer.visit(element);
     }
 
     ////////// Printer //////////

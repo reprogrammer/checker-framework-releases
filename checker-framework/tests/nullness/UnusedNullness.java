@@ -3,14 +3,19 @@ import java.lang.annotation.*;
 import checkers.quals.*;
 import checkers.nullness.quals.*;
 
-import tests.util.SuperQual;
-import tests.util.SubQual;
-
+// TODO: feature request: the Nullness Checker should be aware of
+// the @Unused annotation.
+// This is difficult to implement: one needs to determine the correct
+// AnnotatedTypeFactory for the "when" type system and use it
+// to determine the right annotated type. We currently don't have
+// a mechanism to do this.
+//
+// @skip-test
 public class UnusedNullness {
 
   @TypeQualifier
   @SubtypeOf({})
-  @Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
+  @Target(ElementType.TYPE_USE)
   public @interface Prototype {}
 
   @Unused(when=Prototype.class)
@@ -22,7 +27,7 @@ public class UnusedNullness {
       this.ppt = null;
   }
 
-  protected @Prototype UnusedNullness(int param) {
+  protected @Prototype UnusedNullness(int disambiguate_overloading) {
       // It should be legal to NOT initialize an unused field in
       // a constructor with @Prototype receiver.
   }
@@ -38,4 +43,14 @@ public class UnusedNullness {
       //:: error: (assignment.type.incompatible)
       this.ppt = null;
   }
+
+  protected void useUnusedField1(@Prototype UnusedNullness this) {
+    //:: error: (assignment.type.incompatible)
+    @NonNull Object x = this.ppt;
+  }
+
+  protected void useUnusedField2() {
+    @NonNull Object x = this.ppt;
+  }
+
 }

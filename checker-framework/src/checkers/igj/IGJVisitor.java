@@ -1,22 +1,24 @@
 package checkers.igj;
 
-import java.util.*;
-
-import javax.lang.model.element.*;
-
-import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.ExpressionTree;
-import com.sun.source.tree.Tree;
-
+import checkers.basetype.BaseTypeChecker;
 import checkers.basetype.BaseTypeVisitor;
 import checkers.igj.quals.Assignable;
 import checkers.igj.quals.AssignsFields;
 import checkers.types.AnnotatedTypeMirror;
 import checkers.types.AnnotatedTypeMirror.AnnotatedDeclaredType;
 import checkers.types.AnnotatedTypeMirror.AnnotatedExecutableType;
-import checkers.util.ElementUtils;
-import checkers.util.InternalUtils;
-import checkers.util.TreeUtils;
+
+import javacutils.ElementUtils;
+import javacutils.InternalUtils;
+import javacutils.TreeUtils;
+
+import java.util.Collection;
+
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
+
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.Tree;
 
 /**
  * A type-checking visitor for the IGJ type
@@ -29,10 +31,10 @@ import checkers.util.TreeUtils;
  *
  * @see BaseTypeVisitor
  */
-public class IGJVisitor extends BaseTypeVisitor<IGJChecker> {
+public class IGJVisitor extends BaseTypeVisitor<IGJAnnotatedTypeFactory> {
 
-    public IGJVisitor(IGJChecker checker, CompilationUnitTree root) {
-        super(checker, root);
+    public IGJVisitor(BaseTypeChecker checker) {
+        super(checker);
         checkForAnnotatedJdk();
     }
 
@@ -40,18 +42,18 @@ public class IGJVisitor extends BaseTypeVisitor<IGJChecker> {
     protected boolean checkConstructorInvocation(AnnotatedDeclaredType dt,
             AnnotatedExecutableType constructor, Tree src) {
         Collection<AnnotationMirror> annos = constructor.getReceiverType().getAnnotations();
-        if (annos.contains(checker.I) || annos.contains(checker.ASSIGNS_FIELDS))
+        if (annos.contains(atypeFactory.I) || annos.contains(atypeFactory.ASSIGNS_FIELDS))
             return true;
         else
             return super.checkConstructorInvocation(dt, constructor, src);
     }
 
     @Override
-    public boolean isValidUse(AnnotatedDeclaredType elemType, AnnotatedDeclaredType use) {
-        if (elemType.hasEffectiveAnnotation(checker.I) || use.hasEffectiveAnnotation(checker.READONLY))
+    public boolean isValidUse(AnnotatedDeclaredType elemType, AnnotatedDeclaredType use, Tree tree) {
+        if (elemType.hasEffectiveAnnotation(atypeFactory.I) || use.hasEffectiveAnnotation(atypeFactory.READONLY))
             return true;
 
-        return super.isValidUse(elemType, use);
+        return super.isValidUse(elemType, use, tree);
     }
 
     /**
@@ -83,9 +85,9 @@ public class IGJVisitor extends BaseTypeVisitor<IGJChecker> {
         assert receiverType != null;
 
         final boolean isAssignable =
-            receiverType.hasEffectiveAnnotation(checker.MUTABLE)
-             || receiverType.hasEffectiveAnnotation(checker.BOTTOM_QUAL)
-             || (receiverType.hasEffectiveAnnotation(checker.ASSIGNS_FIELDS)
+            receiverType.hasEffectiveAnnotation(atypeFactory.MUTABLE)
+             || receiverType.hasEffectiveAnnotation(atypeFactory.BOTTOM_QUAL)
+             || (receiverType.hasEffectiveAnnotation(atypeFactory.ASSIGNS_FIELDS)
                      && atypeFactory.isMostEnclosingThisDeref((ExpressionTree)varTree));
 
         return isAssignable;

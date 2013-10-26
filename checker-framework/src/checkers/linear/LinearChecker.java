@@ -1,7 +1,9 @@
 package checkers.linear;
 
 import checkers.basetype.BaseTypeChecker;
-import checkers.linear.quals.*;
+import checkers.linear.quals.Linear;
+import checkers.linear.quals.Normal;
+import checkers.linear.quals.Unusable;
 import checkers.quals.TypeQualifiers;
 
 /**
